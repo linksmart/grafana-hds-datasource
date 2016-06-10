@@ -10,6 +10,7 @@ export class GenericDatasource {
     this.backendSrv = backendSrv;
   }
 
+
   // Called once per panel (graph)
   query(options) {
     var query = this.buildQueryParameters(options);
@@ -17,51 +18,76 @@ export class GenericDatasource {
     if (query.targets.length <= 0) {
       return this.q.when([]);
     }
-		
+
+	  // No metric selected
+	  if (!('target' in query.targets[0])) {
+		  return { data:[] };
+	  }
+
 		console.log(JSON.stringify(query));
-		
-		
-		var all = {};
-		var parent = this;
-		_.each(query.targets, function(e) {
-			var id = e.target.split(':')[0];
-			console.log(id);
-			if(_.isEmpty(all)){
+
+		if(query.targets.length>1){
+			console.error("NOT IMPLEMENTED: Number of targets more than 1:". query.targets.length);
+		}
+
+	  var id = query.targets[0].target.split(':')[0];
+		console.log(id);
+
+	  function url(id, start, end, page){
+		  return parent.url + '/data/' + id +
+			  '?start=' + start + '&end=' + end +
+			  '&page=' + page;
+	  }
+
+	  var all = {};
+	  var parent = this;
+	  var page = 1;
+	  var total;
+
+	  console.log(page);
+		return parent.backendSrv.datasourceRequest({
+			url: url(id, query.range.from.toISOString(), query.range.to.toISOString(), page),
+			data: query,
+			method: 'GET',
+			//headers: { 'Content-Type': 'application/json' }
+		}).then(function(d) {
+			total = d.data.total; // total from data api
+
+			d = parent.convert(d);
+			all = d; // init
+
+			function recursiveReq() {
+				console.log(page);
 				return parent.backendSrv.datasourceRequest({
 					//url: this.url + '/query',
-					url: 'http://farshidpi.duckdns.org:8090/data/' + id + '?start=' + query.range.from.toISOString() + '&end=' + query.range.to.toISOString(),
+					url: url(id, query.range.from.toISOString(), query.range.to.toISOString(), page),
 					data: query,
-					method: 'GET',
-					//headers: { 'Content-Type': 'application/json' }
-				}).then(parent.convert);
-		
-			} else {
-				var x = parent.backendSrv.datasourceRequest({
-					//url: this.url + '/query',
-					url: 'http://farshidpi.duckdns.org:8090/data/' + id + '?start=' + query.range.from.toISOString() + '&end=' + query.range.to.toISOString(),
-					data: query,
-					method: 'GET',
-					//headers: { 'Content-Type': 'application/json' }
-				}).then(parent.convert);
-				console.log("after first");
-				all.$$state.value.concat(x.$$state.value);
-			}
-		});
+					method: 'GET'
+				}).then(function (d) {
+					d = parent.convert(d);
+					all.data[0].datapoints = all.data[0].datapoints.concat(d.data[0].datapoints); // append
 
-		console.log(Date.now(), "All:", JSON.stringify(all));
-		return all;
-		
-		
-		//console.log('http://farshidpi.duckdns.org:8090/data/' + IDs.join(',') + '?start=' + query.range.from.toISOString() + '&end=' + query.range.to.toISOString());
-				/*
-    var x = this.backendSrv.datasourceRequest({
-      url: this.url + '/query',
-      data: query,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    }).then(function(d){console.log("Returning", JSON.stringify(d)); return d;});
-		return x;*/
-	
+					console.log(d);
+					console.log(total, all.data[0].datapoints.length);
+					if(total > all.data[0].datapoints.length) {
+						page++;
+						return recursiveReq();
+					} else {
+						return all;
+					}
+
+				});
+			} // end func
+
+			if(total > all.data[0].datapoints.length) {
+				page++;
+				return recursiveReq();
+			} else {
+				return all;
+			}
+
+		}); // end then
+
   }
 
   // Required
@@ -77,31 +103,21 @@ export class GenericDatasource {
     });
   }
 
-  annotationQuery(options) {
-    return this.backendSrv.datasourceRequest({
-      url: this.url + '/annotations',
-      method: 'POST',
-      data: options
-    }).then(result => {
-      return result.data;
-    });
-  }
-
   // Optional
   // Required for templating
   metricFindQuery(options) {
-		 
-		
+
      return this.backendSrv.datasourceRequest({
       //url: this.url + '/search',
-			url: 'http://farshidpi.duckdns.org:8090/registry',
+			url: this.url + '/registry',
       data: options,
       method: 'GET',
       //headers: { 'Content-Type': 'application/json' }
-    }).then(this.mapToTextValue);
+    }).then(this.convertRegistry);
   }
 
-  mapToTextValue(result) {
+	// Convert registration from Registry API to the format required by Grafana
+  convertRegistry(result) {
 		//console.log(JSON.stringify(result));
 		
 		return _.map(result.data.entries, (d, i) => {
@@ -109,25 +125,14 @@ export class GenericDatasource {
       return { text: d.id + ': ' + d.resource, value: i};
     }); 
   }
-	
-	convert(result) {
-		/*
-		Expected format:
-		[
-			{
-				"target":"upper_75",
-				"datapoints":[
-					[622,1450754160000],
-					[365,1450754220000]
-				]
-			}
-		]
-		*/
-		
+
+	// Convert historical SenML data from Data API to the format required by Grafana
+	convertData(result) {
+
 		console.log(Date.now(), "convert", JSON.stringify(result));
 
 		if(result.data.data.e.length == 0){
-			return [];
+			return result;
 		}
 		
 		var id = result.data.url.replace(/^\/data\//, '');
@@ -139,12 +144,14 @@ export class GenericDatasource {
 		};
 		
 		for(var i=0; i<result.data.data.e.length; i++){
-			entry.datapoints.push([result.data.data.e[i].v]);
+			entry.datapoints.push([result.data.data.e[i].v, result.data.data.e[i].t*1000]);
 		}
+
+		result.data = [entry];
 		
-		console.log(Date.now(), "converted", JSON.stringify([entry]));
+		console.log(Date.now(), "converted", JSON.stringify(result));
 		
-		return [entry];
+		return result;
 	}
 
   buildQueryParameters(options) {
