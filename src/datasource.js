@@ -23,49 +23,52 @@ export class GenericDatasource {
 	  if (!('target' in query.targets[0])) {
 		  return { data:[] };
 	  }
+		console.log("Query", query);
 
-		console.log(JSON.stringify(query));
+	  var IDs = [];
+	  for(var i=0; i<query.targets.length; i++){
+		  IDs.push(query.targets[i].target.split(':')[0])
+	  }
+	  console.log(IDs);
 
-		if(query.targets.length>1){
-			console.error("NOT IMPLEMENTED: Number of targets more than 1:". query.targets.length);
-		}
-
-	  var id = query.targets[0].target.split(':')[0];
-		console.log(id);
-
+		// Constructs the url to query from Data API
 	  function url(id, start, end, page){
 		  return parent.url + '/data/' + id +
 			  '?start=' + start + '&end=' + end +
 			  '&page=' + page;
 	  }
 
-	  var all = {};
+	  var entries = Array.apply(null, Array(query.targets.length)).map(function () {
+		  return { target: '',	datapoints: [] };
+	  });
 	  var parent = this;
 	  var page = 1;
-	  var total;
+	  var idi = 0; // id index
 
 	  function recursiveReq() {
-		  console.log(page);
+		  console.log(idi, page);
 		  return parent.backendSrv.datasourceRequest({
-			  url: url(id, query.range.from.toISOString(), query.range.to.toISOString(), page),
+			  url: url(IDs[idi], query.range.from.toISOString(), query.range.to.toISOString(), page),
 			  data: query,
 			  method: 'GET'
 		  }).then(function (d) {
-			  total = d.data.total; // total from data api
-			  d = parent.convertData(d);
-			  var head = all;
-			  all = d;
-			  if(!_.isEmpty(head)) {
-				  all.data[0].datapoints = head.data[0].datapoints.concat(all.data[0].datapoints); // push head array to front
-			  }
+			  var total = d.data.total; // total from data api
+			  var entry = parent.convertData(d.data);
+			  entries[idi].target = entry.target;
+			  entries[idi].datapoints = entries[idi].datapoints.concat(entry.datapoints);
 
-			  console.log(d);
-			  console.log(total, all.data[0].datapoints.length);
-			  if(total > all.data[0].datapoints.length) {
+			  console.log(d, entries);
+			  console.log(total, entries[idi].datapoints.length);
+			  if(total > entries[idi].datapoints.length) { // query the next page
 				  page++;
 				  return recursiveReq();
-			  } else {
-				  return all;
+			  } else if (idi < IDs.length-1){ // one target done, query the next target
+				  idi++;
+				  page = 1;
+				  return recursiveReq();
+			  } else { // all done
+				  d.data = entries;
+				  return d;
 			  }
 
 		  });
@@ -111,29 +114,27 @@ export class GenericDatasource {
   }
 
 	// Convert historical SenML data from Data API to the format required by Grafana
-	convertData(result) {
-		console.log(Date.now(), "convert", JSON.stringify(result));
+	convertData(data) {
+		console.log("convert", data);
 
-		if(result.data.data.e.length == 0){
-			return result;
+		if(data.data.e.length == 0){
+			return data;
 		}
 		
-		var id = result.data.url.replace(/^\/data\//, '');
+		var id = data.url.replace(/^\/data\//, '');
 		id = id.split('?')[0];
 		
 		var entry = { 
-			target: id + ': ' + result.data.data.e[0].n, 
+			target: id + ': ' + data.data.e[0].n,
 			datapoints: []
 		};
 		
-		for(var i=0; i<result.data.data.e.length; i++){
-			entry.datapoints.push([result.data.data.e[i].v, result.data.data.e[i].t*1000]);
+		for(var i=0; i<data.data.e.length; i++){
+			entry.datapoints.push([data.data.e[i].v, data.data.e[i].t*1000]);
 		}
 
-		result.data = [entry];
-		console.log(Date.now(), "converted", JSON.stringify(result));
-		
-		return result;
+		console.log("converted", entry);
+		return entry;
 	}
 
   buildQueryParameters(options) {
