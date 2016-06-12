@@ -44,50 +44,34 @@ export class GenericDatasource {
 	  var page = 1;
 	  var total;
 
-	  console.log(page);
-		return parent.backendSrv.datasourceRequest({
-			url: url(id, query.range.from.toISOString(), query.range.to.toISOString(), page),
-			data: query,
-			method: 'GET',
-			//headers: { 'Content-Type': 'application/json' }
-		}).then(function(d) {
-			total = d.data.total; // total from data api
+	  function recursiveReq() {
+		  console.log(page);
+		  return parent.backendSrv.datasourceRequest({
+			  url: url(id, query.range.from.toISOString(), query.range.to.toISOString(), page),
+			  data: query,
+			  method: 'GET'
+		  }).then(function (d) {
+			  total = d.data.total; // total from data api
+			  d = parent.convertData(d);
+			  var head = all;
+			  all = d;
+			  if(!_.isEmpty(head)) {
+				  all.data[0].datapoints = head.data[0].datapoints.concat(all.data[0].datapoints); // push head array to front
+			  }
 
-			d = parent.convert(d);
-			all = d; // init
+			  console.log(d);
+			  console.log(total, all.data[0].datapoints.length);
+			  if(total > all.data[0].datapoints.length) {
+				  page++;
+				  return recursiveReq();
+			  } else {
+				  return all;
+			  }
 
-			function recursiveReq() {
-				console.log(page);
-				return parent.backendSrv.datasourceRequest({
-					//url: this.url + '/query',
-					url: url(id, query.range.from.toISOString(), query.range.to.toISOString(), page),
-					data: query,
-					method: 'GET'
-				}).then(function (d) {
-					d = parent.convert(d);
-					all.data[0].datapoints = all.data[0].datapoints.concat(d.data[0].datapoints); // append
+		  });
+	  } // end func
 
-					console.log(d);
-					console.log(total, all.data[0].datapoints.length);
-					if(total > all.data[0].datapoints.length) {
-						page++;
-						return recursiveReq();
-					} else {
-						return all;
-					}
-
-				});
-			} // end func
-
-			if(total > all.data[0].datapoints.length) {
-				page++;
-				return recursiveReq();
-			} else {
-				return all;
-			}
-
-		}); // end then
-
+	  return recursiveReq();
   }
 
   // Required
@@ -128,7 +112,6 @@ export class GenericDatasource {
 
 	// Convert historical SenML data from Data API to the format required by Grafana
 	convertData(result) {
-
 		console.log(Date.now(), "convert", JSON.stringify(result));
 
 		if(result.data.data.e.length == 0){
@@ -148,7 +131,6 @@ export class GenericDatasource {
 		}
 
 		result.data = [entry];
-		
 		console.log(Date.now(), "converted", JSON.stringify(result));
 		
 		return result;
