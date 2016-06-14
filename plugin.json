@@ -1,19 +1,19 @@
 {
-  "name": "HistoricalDatastore",
-  "id": "hds-grafana-datasource",
+  "name": "LinkSmart HDS",
+  "id": "linksmart-hds-datasource",
   "type": "datasource",
 
   "staticRoot": ".",
 
   "partials": {
-    "config": "public/app/plugins/datasource/simplejson/partials/config.html"
+    "config": "public/app/plugins/datasource/linksmart-hds-datasource/partials/config.html"
   },
 
   "metrics": true,
   "annotations": false,
 
   "info": {
-    "description": "Grafana datasource plugin for Historical Datastore",
+    "description": "Grafana datasource plugin for LinkSmart® Historical Datastore",
     "author": {
       "name": "Fraunhofer FIT",
       "url": "http://fit.fraunhofer.de/"
@@ -24,11 +24,11 @@
     },
     "links": [
       {"name": "Historical Datastore", "url": "https://linksmart.eu/redmine/projects/historical-datastore"},
-			{"name": "Source Codes", "url": "https://linksmart.eu/redmine/projects/historical-datastore/repository/grafana-datasource"},
+      {"name": "Source Codes", "url": "https://linksmart.eu/redmine/projects/historical-datastore/repository/grafana-datasource"},
       {"name": "MIT License", "url": "https://github.com/grafana/simple-json-datasource/blob/master/LICENSE"}
     ],
-    "version": "0.1b1",
-    "updated": "2016-05-11"
+    "version": "0.1",
+    "updated": "2016-06-14"
   },
 
   "dependencies": {
