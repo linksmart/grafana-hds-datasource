@@ -23,13 +23,7 @@ export class GenericDatasource {
 	  if (!('target' in query.targets[0])) {
 		  return { data:[] };
 	  }
-		console.log("Query", query);
-
-	  var IDs = [];
-	  for(var i=0; i<query.targets.length; i++){
-		  IDs.push(query.targets[i].target.split(':')[0])
-	  }
-	  console.log(IDs);
+		//console.log("Query:", query);
 
 		// Constructs the url to query from Data API
 	  function url(id, start, end, page){
@@ -45,24 +39,23 @@ export class GenericDatasource {
 	  var page = 1;
 	  var idi = 0; // id index
 
+	  // Recursively query all pages of every target
 	  function recursiveReq() {
-		  console.log(idi, page);
+		  var id = query.targets[idi].target.split(':')[0];
 		  return parent.backendSrv.datasourceRequest({
-			  url: url(IDs[idi], query.range.from.toISOString(), query.range.to.toISOString(), page),
+			  url: url(id, query.range.from.toISOString(), query.range.to.toISOString(), page),
 			  data: query,
 			  method: 'GET'
 		  }).then(function (d) {
 			  var total = d.data.total; // total from data api
-			  var entry = parent.convertData(d.data);
-			  entries[idi].target = entry.target;
-			  entries[idi].datapoints = entries[idi].datapoints.concat(entry.datapoints);
+			  var datapoints = parent.convertData(d.data);
+			  entries[idi].target = query.targets[idi].target;
+			  entries[idi].datapoints = entries[idi].datapoints.concat(datapoints);
 
-			  console.log(d, entries);
-			  console.log(total, entries[idi].datapoints.length);
 			  if(total > entries[idi].datapoints.length) { // query the next page
 				  page++;
 				  return recursiveReq();
-			  } else if (idi < IDs.length-1){ // one target done, query the next target
+			  } else if (idi < query.targets.length-1){ // one target done, query the next target
 				  idi++;
 				  page = 1;
 				  return recursiveReq();
@@ -93,7 +86,6 @@ export class GenericDatasource {
   // Optional
   // Required for templating
   metricFindQuery(options) {
-
      return this.backendSrv.datasourceRequest({
       //url: this.url + '/search',
 			url: this.url + '/registry',
@@ -104,37 +96,20 @@ export class GenericDatasource {
   }
 
 	// Convert registration from Registry API to the format required by Grafana
-  convertRegistry(result) {
-		//console.log(JSON.stringify(result));
-		
-		return _.map(result.data.entries, (d, i) => {
-			//console.log(d,i);
+  convertRegistry(res) {
+		return _.map(res.data.entries, (d, i) => {
       return { text: d.id + ': ' + d.resource, value: i};
-    }); 
+    });
   }
 
-	// Convert historical SenML data from Data API to the format required by Grafana
+	// Convert historical SenML data from Data API to Grafana datapoints
 	convertData(data) {
-		console.log("convert", data);
-
-		if(data.data.e.length == 0){
-			return data;
-		}
-		
-		var id = data.url.replace(/^\/data\//, '');
-		id = id.split('?')[0];
-		
-		var entry = { 
-			target: id + ': ' + data.data.e[0].n,
-			datapoints: []
-		};
-		
+		var datapoints = Array(data.data.e.length);
 		for(var i=0; i<data.data.e.length; i++){
-			entry.datapoints.push([data.data.e[i].v, data.data.e[i].t*1000]);
+			datapoints[i] = [data.data.e[i].v, data.data.e[i].t*1000];
 		}
 
-		console.log("converted", entry);
-		return entry;
+		return datapoints;
 	}
 
   buildQueryParameters(options) {
