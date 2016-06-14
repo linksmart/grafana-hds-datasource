@@ -1,33 +1,34 @@
 {
-  "name": "SimpleJson",
-  "id": "grafana-simple-json-datasource",
+  "name": "LinkSmart HDS",
+  "id": "linksmart-hds-datasource",
   "type": "datasource",
 
   "staticRoot": ".",
 
   "partials": {
-    "config": "public/app/plugins/datasource/simplejson/partials/config.html"
+    "config": "public/app/plugins/datasource/linksmart-hds-datasource/partials/config.html"
   },
 
   "metrics": true,
-  "annotations": true,
+  "annotations": false,
 
   "info": {
-    "description": "simple json datasource",
+    "description": "Grafana datasource plugin for LinkSmart® Historical Datastore",
     "author": {
-      "name": "Raintank Inc.",
-      "url": "http://raintank.io"
+      "name": "Fraunhofer FIT",
+      "url": "http://fit.fraunhofer.de/"
     },
     "logos": {
-      "small": "src/img/simpleJson_logo.svg",
-      "large": "src/img/simpleJson_logo.svg"
+      "small": "src/img/linksmartlogo.png",
+      "large": "src/img/linksmartlogo.png"
     },
     "links": [
-      {"name": "GitHub", "url": "https://github.com/grafana/simple-json-datasource"},
+      {"name": "Historical Datastore", "url": "https://linksmart.eu/redmine/projects/historical-datastore"},
+      {"name": "Source Codes", "url": "https://linksmart.eu/redmine/projects/historical-datastore/repository/grafana-datasource"},
       {"name": "MIT License", "url": "https://github.com/grafana/simple-json-datasource/blob/master/LICENSE"}
     ],
-    "version": "1.0.3",
-    "updated": "2016-05-11"
+    "version": "0.1",
+    "updated": "2016-06-14"
   },
 
   "dependencies": {
