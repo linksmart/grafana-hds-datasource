@@ -1,3 +1,5 @@
+// Copyright 2016 Fraunhofer Institute for Applied Information Technology FIT
+
 import {QueryCtrl} from 'app/plugins/sdk';
 import './css/query-editor.css!'
 

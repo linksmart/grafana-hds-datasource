@@ -1,3 +1,5 @@
+// Copyright 2016 Fraunhofer Institute for Applied Information Technology FIT
+
 import _ from "lodash";
 
 export class GenericDatasource {
