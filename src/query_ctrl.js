@@ -11,6 +11,7 @@ export class GenericDatasourceQueryCtrl extends QueryCtrl {
     this.scope = $scope;
     this.uiSegmentSrv = uiSegmentSrv;
     this.target.target = this.target.target || 'select metric';
+    this.target.sourceType = this.target.sourceType || 'select source';
   }
 
   getOptions() {
@@ -19,7 +20,14 @@ export class GenericDatasourceQueryCtrl extends QueryCtrl {
       // Options have to be transformed by uiSegmentSrv to be usable by metric-segment-model directive
   }
 
+  getSources() {
+    return this.datasource.metricFindSources(this.target)
+      .then(this.uiSegmentSrv.transformToSegments(false));
+    // Options have to be transformed by uiSegmentSrv to be usable by metric-segment-model directive
+  }
+
   onChangeInternal() {
+    console.log("SOURCE:",this.target.sourceType);
     this.panelCtrl.refresh(); // Asks the panel to refresh data.
   }
 }

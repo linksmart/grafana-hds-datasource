@@ -122,4 +122,44 @@ export class GenericDatasource {
 
     return options;
   }
+
+	metricFindSources(options) {
+		console.log("TARGET:",options.target);
+		var id = options.target.split(':')[0];
+		return this.backendSrv.datasourceRequest({
+			//url: this.url + '/search',
+			url: this.url + '/registry/'+id,
+			//data: options,
+			method: 'GET',
+			//headers: { 'Content-Type': 'application/json' }
+		}).then(this.convertSources);
+	}
+
+	convertSources(res) {
+		console.log(res.data);
+
+		function formatRetention(retention){
+			if(retention==""){
+				return ", no retention"; // ∞
+			}
+			return ', retention '+retention;
+		}
+
+		var index = 0;
+		var value = {text: 'value'+formatRetention(res.data.retention), value: index++}; // raw un-aggregated data
+		var m = _.reduce(res.data.aggregation, (vectorized, a) => {
+
+			var r = _.reduce(a.aggregates, (merged, aggregate) => {
+				merged.push({text: aggregate+', every '+a.interval+ formatRetention(a.retention), value: index++})
+				return merged;
+			}, []);
+
+			return vectorized.concat(r);
+
+	}, [value]);
+
+	m = [m[0]].concat(_.sortBy(m.slice(1,m.length), 'text')); // sort aggregates
+	return m;
+
+	}
 }
