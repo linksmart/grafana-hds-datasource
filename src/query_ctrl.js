@@ -5,7 +5,7 @@ import './css/query-editor.css!'
 
 export class GenericDatasourceQueryCtrl extends QueryCtrl {
 
-  constructor($scope, $injector, uiSegmentSrv)  {
+  constructor($scope, $injector, uiSegmentSrv) {
     super($scope, $injector);
 
     this.scope = $scope;
@@ -17,7 +17,7 @@ export class GenericDatasourceQueryCtrl extends QueryCtrl {
   getOptions() {
     return this.datasource.metricFindQuery(this.target)
       .then(this.uiSegmentSrv.transformToSegments(false));
-      // Options have to be transformed by uiSegmentSrv to be usable by metric-segment-model directive
+    // Options have to be transformed by uiSegmentSrv to be usable by metric-segment-model directive
   }
 
   getSources() {
@@ -27,7 +27,7 @@ export class GenericDatasourceQueryCtrl extends QueryCtrl {
   }
 
   onChangeInternal() {
-    console.log("SOURCE:",this.target.sourceType);
+    console.log("onChangeInternal SOURCE:", this.target.sourceType);
     this.panelCtrl.refresh(); // Asks the panel to refresh data.
   }
 }
