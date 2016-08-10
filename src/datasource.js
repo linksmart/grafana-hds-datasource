@@ -12,7 +12,7 @@ export class GenericDatasource {
     this.backendSrv = backendSrv;
   }
 
-
+  // Query data from Data API
   // Called once per panel (graph)
   query(options) {
     var query = this.buildQueryParameters(options);
@@ -24,7 +24,7 @@ export class GenericDatasource {
     }
 
     // No metric selected
-    if (!('target' in query.targets[0])) {
+    if (!('metric' in query.targets[0])) {
       return {data: []};
     }
     //console.log("Query:", query);
@@ -45,25 +45,26 @@ export class GenericDatasource {
 
     // Recursively query all pages of every target
     function recursiveReq() {
-      var sourceType = query.targets[idi].sourceType;
-      console.log("sourceType:", sourceType);
+      var source = query.targets[idi].source;
+      console.log("source:", source);
       var apiEndpoint = "data/";
       var senmlFields = {value: "v", time: "t"};
       // Query for aggregation data
-      if (!sourceType.startsWith("value")) {
-        var re = /^([a-z]*), every ([0-9]*[s|m|h|w]),.*\(Aggr:\s(.*)\)$/g;
-        var m = re.exec(sourceType);
+      if (!source.startsWith("value")) {
+        console.log("Aggr id:", query.targets[idi].sourceIDs[source]);
+        var aggrID = query.targets[idi].sourceIDs[source]
+        // retrieve the selected aggregate and interval
+        var re = /^([a-z]*), every ([0-9]*[s|m|h|w]).*$/g;
+        var m = re.exec(source);
         var aggregate = m[1];
         var interval = m[2];
-        var aggrID = m[3];
 
         apiEndpoint = "aggr/" + aggrID + "/";
         senmlFields.value = aggregate;
         senmlFields.time = "ts";
       }
-      console.log(apiEndpoint);
 
-      var id = query.targets[idi].target.split(':')[0];
+      var id = query.targets[idi].metric.split(':')[0];
       return parent.backendSrv.datasourceRequest({
         url: url(apiEndpoint, id, query.range.from.toISOString(), query.range.to.toISOString(), page),
         data: query,
@@ -71,7 +72,9 @@ export class GenericDatasource {
       }).then(function (d) {
         var total = d.data.total; // total from data api
         var datapoints = parent.convertData(d.data, senmlFields);
-        entries[idi].target = query.targets[idi].target;
+        // append aggregate name to metric title
+        var aggregate = senmlFields.value=='v'? '' : '.'+senmlFields.value;
+        entries[idi].target = query.targets[idi].metric+aggregate;
         entries[idi].datapoints = entries[idi].datapoints.concat(datapoints);
 
         if (total > entries[idi].datapoints.length) { // query the next page
@@ -105,6 +108,7 @@ export class GenericDatasource {
     });
   }
 
+  // Query list of metrics from Registry API
   // Optional
   // Required for templating
   metricFindQuery(options) {
@@ -137,15 +141,16 @@ export class GenericDatasource {
   buildQueryParameters(options) {
     //remove placeholder targets
     options.targets = _.filter(options.targets, target => {
-      return target.target !== 'select metric';
+      return target.metric !== 'select metric';
     });
 
     return options;
   }
 
-  metricFindSources(options) {
-    console.log("metricFindSources TARGET:", options.target);
-    var id = options.target.split(':')[0];
+  // Query list of sources of data (value and aggregations) from Registry API
+  sourceFindQuery(options) {
+    console.log("sourceFindQuery metric:", options.metric);
+    var id = options.metric.split(':')[0];
     return this.backendSrv.datasourceRequest({
       url: this.url + '/registry/' + id,
       method: 'GET',
@@ -153,9 +158,8 @@ export class GenericDatasource {
     }).then(this.convertSources);
   }
 
+  // Convert meta data about aggregates from Registry API to the format required by Grafana
   convertSources(res) {
-    //console.log(res.data);
-
     function formatRetention(retention) {
       if (retention == "") {
         return ", no retention"; // ∞
@@ -164,12 +168,13 @@ export class GenericDatasource {
     }
 
     var index = 0;
-    var value = {text: 'value' + formatRetention(res.data.retention), value: index++}; // raw un-aggregated data
+    var value = {id: 'value', text: 'value' + formatRetention(res.data.retention), value: index++}; // raw un-aggregated data
     var m = _.reduce(res.data.aggregation, (vectorized, a) => {
 
       var r = _.reduce(a.aggregates, (merged, aggregate) => {
         merged.push({
-          text: aggregate + ', every ' + a.interval + formatRetention(a.retention) + ' (Aggr: ' + a.id + ')',
+          id: a.id,
+          text: aggregate + ', every ' + a.interval + formatRetention(a.retention),
           value: index++
         });
         return merged;
@@ -179,7 +184,8 @@ export class GenericDatasource {
 
     }, [value]);
 
-    m = [m[0]].concat(_.sortBy(m.slice(1, m.length), 'text')); // sort aggregates
+    // sort aggregates
+    m = [m[0]].concat(_.sortBy(m.slice(1, m.length), 'text'));
     return m;
 
   }

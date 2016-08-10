@@ -10,8 +10,9 @@ export class GenericDatasourceQueryCtrl extends QueryCtrl {
 
     this.scope = $scope;
     this.uiSegmentSrv = uiSegmentSrv;
-    this.target.target = this.target.target || 'select metric';
-    this.target.sourceType = this.target.sourceType || 'select source';
+    this.target.metric = this.target.metric || 'select metric';
+    this.target.source = this.target.source || 'select source';
+    this.target.sourceIDs = this.target.sourceIDs || {}; // aggregation ids
   }
 
   getOptions() {
@@ -21,13 +22,21 @@ export class GenericDatasourceQueryCtrl extends QueryCtrl {
   }
 
   getSources() {
-    return this.datasource.metricFindSources(this.target)
+    var that = this;
+    return this.datasource.sourceFindQuery(this.target)
+      .then(function (sources) {
+        // save a map of source->aggregation ids
+        sources.forEach(function (s) {
+          that.target.sourceIDs[s.text] = s.id;
+        });
+        return sources;
+      })
       .then(this.uiSegmentSrv.transformToSegments(false));
     // Options have to be transformed by uiSegmentSrv to be usable by metric-segment-model directive
   }
 
   onChangeInternal() {
-    console.log("onChangeInternal SOURCE:", this.target.sourceType);
+    console.log("onChangeInternal:", this.target.source);
     this.panelCtrl.refresh(); // Asks the panel to refresh data.
   }
 }
