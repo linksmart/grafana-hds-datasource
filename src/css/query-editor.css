@@ -3,3 +3,14 @@
 .generic-datasource-query-row .query-keyword {
   width: 75px;
 }
+
+.generic-datasource-query-row .query-keyword {
+  width: auto !important;
+  margin-left: 10px !important;
+}
+
+.gf-form-query{
+  margin-bottom: 5px;
+  background-color: #141414;
+  padding: 5px;
+}
