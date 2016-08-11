@@ -16,14 +16,14 @@ export class GenericDatasourceQueryCtrl extends QueryCtrl {
   }
 
   getOptions() {
-    return this.datasource.metricFindQuery(this.target)
+    return this.datasource.queryMetrics(this.target)
       .then(this.uiSegmentSrv.transformToSegments(false));
     // Options have to be transformed by uiSegmentSrv to be usable by metric-segment-model directive
   }
 
   getSources() {
     var that = this;
-    return this.datasource.sourceFindQuery(this.target)
+    return this.datasource.querySources(this.target)
       .then(function (sources) {
         // save a map of source->aggregation ids
         sources.forEach(function (s) {
@@ -38,7 +38,7 @@ export class GenericDatasourceQueryCtrl extends QueryCtrl {
   }
 
   onChangeInternal() {
-    console.log("onChangeInternal:", this.target.source);
+    //console.log("onChangeInternal:", this.target.source);
     this.panelCtrl.refresh(); // Asks the panel to refresh data.
   }
 }

@@ -12,53 +12,45 @@ export class GenericDatasource {
     this.backendSrv = backendSrv;
   }
 
+  // Required
+  // Used for testing datasource in datasource configuration page
+  testDatasource() {
+    return this.backendSrv.datasourceRequest({
+      url: this.url + '/',
+      method: 'GET'
+    }).then(response => {
+      if (response.status === 200) {
+        return {status: "success", message: "Data source is working", title: "Success"};
+      }
+    });
+  }
+
   // Query data from Data API
   // Called once per panel (graph)
   query(options) {
-    var query = this.buildQueryParameters(options);
+    var query = this.filterPlaceholders(options);
     //console.log("query QUERY:", JSON.stringify(query));
 
-    if (query.targets.length <= 0) {
-      return this.q.when([]);
-    }
-
-    // No metric selected
-    if (!('metric' in query.targets[0])) {
-      return {data: []};
-    }
-
-    // Don't query if target is set to hidden OR source is not selected
-    var targets = [];
-    query.targets.forEach(function (target) {
-      if (target.hide != true && target.source != 'select source') {
-        targets.push(target);
-      }
+    // Filter targets that are set to hidden
+    query.targets = _.filter(query.targets, target => {
+      return target.hide != true;
     });
-    query.targets = targets;
 
-    // All targets hidden
-    if (query.targets.length == 0) {
-      return {data: []};
+    // All targets filtered OR no metric selected
+    if (query.targets.length == 0 || !('metric' in query.targets[0])) {
+      return {data: []}; // return this.q.when([]);
     }
 
-    // Constructs the url to query from Data API
-    function url(apiEndpoint, id, start, end, page) {
-      return parent.url + "/" + apiEndpoint + id +
-        '?start=' + start + '&end=' + end +
-        '&page=' + page;
-    }
-
+    // Make a new array with zero-valued object fields
     var entries = Array.apply(null, Array(query.targets.length)).map(function () {
       return {target: '', datapoints: []};
     });
-    var parent = this;
-    var page = 1;
-    var idi = 0; // id index
 
+    var parent = this;
     // Recursively query all pages of every target
-    function recursiveReq() {
+    function recursiveReq(page, idi) {
       var source = query.targets[idi].source;
-      console.log("source:", source, query.targets[idi].sourceIDs[source]);
+      //console.log("source:", source, ":", query.targets[idi].sourceIDs[source]);
       var apiEndpoint = "data/";
       var senmlFields = {value: "v", time: "t"};
       // Query for aggregation data
@@ -77,7 +69,8 @@ export class GenericDatasource {
 
       var id = query.targets[idi].metric.split(':')[0];
       return parent.backendSrv.datasourceRequest({
-        url: url(apiEndpoint, id, query.range.from.toISOString(), query.range.to.toISOString(), page),
+        url: parent.url + "/" + apiEndpoint + id +
+        '?start=' + query.range.from.toISOString() + '&end=' + query.range.to.toISOString() + '&page=' + page,
         data: query,
         method: 'GET'
       }).then(function (d) {
@@ -88,14 +81,14 @@ export class GenericDatasource {
         entries[idi].target = query.targets[idi].metric + aggregate;
         entries[idi].datapoints = entries[idi].datapoints.concat(datapoints);
 
-        if (total > entries[idi].datapoints.length) { // query the next page
-          page++;
-          return recursiveReq();
-        } else if (idi < query.targets.length - 1) { // one target done, query the next target
-          idi++;
-          page = 1;
-          return recursiveReq();
-        } else { // all done
+        if (total > entries[idi].datapoints.length) {
+          // query the next page
+          return recursiveReq(++page, idi);
+        } else if (idi < query.targets.length - 1) {
+          // one target done, query the next target
+          return recursiveReq(1, ++idi);
+        } else {
+          // all done
           d.data = entries;
           return d;
         }
@@ -103,40 +96,8 @@ export class GenericDatasource {
       });
     } // end func
 
-    return recursiveReq();
-  }
-
-  // Required
-  // Used for testing datasource in datasource configuration pange
-  testDatasource() {
-    return this.backendSrv.datasourceRequest({
-      url: this.url + '/',
-      method: 'GET'
-    }).then(response => {
-      if (response.status === 200) {
-        return {status: "success", message: "Data source is working", title: "Success"};
-      }
-    });
-  }
-
-  // Query list of metrics from Registry API
-  // Optional
-  // Required for templating
-  metricFindQuery(options) {
-    return this.backendSrv.datasourceRequest({
-      //url: this.url + '/search',
-      url: this.url + '/registry',
-      data: options,
-      method: 'GET',
-      //headers: { 'Content-Type': 'application/json' }
-    }).then(this.convertRegistry);
-  }
-
-  // Convert registration from Registry API to the format required by Grafana
-  convertRegistry(res) {
-    return _.map(res.data.entries, (d, i) => {
-      return {text: d.id + ': ' + d.resource, value: i};
-    });
+    // Start from page 1, id 0
+    return recursiveReq(1, 0);
   }
 
   // Convert historical SenML data from Data/Aggr API to Grafana datapoints
@@ -149,24 +110,43 @@ export class GenericDatasource {
     return datapoints;
   }
 
-  buildQueryParameters(options) {
-    //remove placeholder targets
+  // Remove targets that have unselected metric or source
+  filterPlaceholders(options) {
     options.targets = _.filter(options.targets, target => {
-      return target.metric !== 'select metric';
+      return target.metric !== 'select metric' && target.source !== 'select source';
     });
 
     return options;
   }
 
+  // Query list of metrics from Registry API
+  // Required for templating
+  queryMetrics(options) {
+    return this.backendSrv.datasourceRequest({
+      //url: this.url + '/search',
+      url: this.url + '/registry',
+      data: options,
+      method: 'GET',
+      //headers: { 'Content-Type': 'application/json' }
+    }).then(this.convertMetrics);
+  }
+
+  // Convert registration from Registry API to the format required by Grafana
+  convertMetrics(res) {
+    return _.map(res.data.entries, (d, i) => {
+      return {text: d.id + ': ' + d.resource, value: i};
+    });
+  }
+
   // Query list of sources of data (value and aggregations) from Registry API
-  sourceFindQuery(options) {
+  // Required for templating
+  querySources(options) {
     // Metric is not selected
     if (options.metric == 'select metric') {
       return new Promise((resolve, reject) => {
         reject("metric not selected");
       });
     }
-    console.log("sourceFindQuery metric:", options.metric);
     var id = options.metric.split(':')[0];
     return this.backendSrv.datasourceRequest({
       url: this.url + '/registry/' + id,
@@ -185,25 +165,27 @@ export class GenericDatasource {
     }
 
     var index = 0;
-    var value = {id: 'value', text: 'value' + formatRetention(res.data.retention), value: index++}; // raw un-aggregated data
-    var m = _.reduce(res.data.aggregation, (vectorized, a) => {
-
-      var r = _.reduce(a.aggregates, (merged, aggregate) => {
-        merged.push({
+    // raw un-aggregated data
+    var value = {id: 'value', text: 'value' + formatRetention(res.data.retention), value: index++};
+    // Flatten aggregations of a target (datasource)
+    // start with 'value' as input and concatenate flattened aggregates
+    var r = _.reduce(res.data.aggregation, (input, a) => {
+      // Flatten and format aggregates
+      var r2 = _.reduce(a.aggregates, (array, aggregate) => {
+        array.push({
           id: a.id,
           text: aggregate + ', every ' + a.interval + formatRetention(a.retention),
           value: index++
         });
-        return merged;
+        return array;
       }, []);
 
-      return vectorized.concat(r);
-
+      return input.concat(r2);
     }, [value]);
 
     // sort aggregates
-    m = [m[0]].concat(_.sortBy(m.slice(1, m.length), 'text'));
-    return m;
+    r = [r[0]].concat(_.sortBy(r.slice(1, r.length), 'text'));
+    return r;
 
   }
 }
