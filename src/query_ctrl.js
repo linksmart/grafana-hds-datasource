@@ -30,6 +30,8 @@ export class GenericDatasourceQueryCtrl extends QueryCtrl {
           that.target.sourceIDs[s.text] = s.id;
         });
         return sources;
+      }, function (rejected) {
+        return [];
       })
       .then(this.uiSegmentSrv.transformToSegments(false));
     // Options have to be transformed by uiSegmentSrv to be usable by metric-segment-model directive

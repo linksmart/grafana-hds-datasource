@@ -18,7 +18,6 @@ export class GenericDatasource {
     var query = this.buildQueryParameters(options);
     //console.log("query QUERY:", JSON.stringify(query));
 
-
     if (query.targets.length <= 0) {
       return this.q.when([]);
     }
@@ -27,7 +26,20 @@ export class GenericDatasource {
     if (!('metric' in query.targets[0])) {
       return {data: []};
     }
-    //console.log("Query:", query);
+
+    // Don't query if target is set to hidden OR source is not selected
+    var targets = [];
+    query.targets.forEach(function (target) {
+      if (target.hide != true && target.source != 'select source') {
+        targets.push(target);
+      }
+    });
+    query.targets = targets;
+
+    // All targets hidden
+    if (query.targets.length == 0) {
+      return {data: []};
+    }
 
     // Constructs the url to query from Data API
     function url(apiEndpoint, id, start, end, page) {
@@ -46,12 +58,11 @@ export class GenericDatasource {
     // Recursively query all pages of every target
     function recursiveReq() {
       var source = query.targets[idi].source;
-      console.log("source:", source);
+      console.log("source:", source, query.targets[idi].sourceIDs[source]);
       var apiEndpoint = "data/";
       var senmlFields = {value: "v", time: "t"};
       // Query for aggregation data
       if (!source.startsWith("value")) {
-        console.log("Aggr id:", query.targets[idi].sourceIDs[source]);
         var aggrID = query.targets[idi].sourceIDs[source]
         // retrieve the selected aggregate and interval
         var re = /^([a-z]*), every ([0-9]*[s|m|h|w]).*$/g;
@@ -149,6 +160,12 @@ export class GenericDatasource {
 
   // Query list of sources of data (value and aggregations) from Registry API
   sourceFindQuery(options) {
+    // Metric is not selected
+    if (options.metric == 'select metric') {
+      return new Promise((resolve, reject) => {
+        reject("metric not selected");
+      });
+    }
     console.log("sourceFindQuery metric:", options.metric);
     var id = options.metric.split(':')[0];
     return this.backendSrv.datasourceRequest({
