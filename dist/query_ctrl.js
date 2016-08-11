@@ -68,19 +68,37 @@ System.register(['app/plugins/sdk', './css/query-editor.css!'], function (_expor
 
           _this.scope = $scope;
           _this.uiSegmentSrv = uiSegmentSrv;
-          _this.target.target = _this.target.target || 'select metric';
+          _this.target.metric = _this.target.metric || 'select metric';
+          _this.target.source = _this.target.source || 'select source';
+          _this.target.sourceIDs = _this.target.sourceIDs || {}; // aggregation ids
           return _this;
         }
 
         _createClass(GenericDatasourceQueryCtrl, [{
           key: 'getOptions',
           value: function getOptions() {
-            return this.datasource.metricFindQuery(this.target).then(this.uiSegmentSrv.transformToSegments(false));
+            return this.datasource.queryMetrics(this.target).then(this.uiSegmentSrv.transformToSegments(false));
+            // Options have to be transformed by uiSegmentSrv to be usable by metric-segment-model directive
+          }
+        }, {
+          key: 'getSources',
+          value: function getSources() {
+            var that = this;
+            return this.datasource.querySources(this.target).then(function (sources) {
+              // save a map of source->aggregation ids
+              sources.forEach(function (s) {
+                that.target.sourceIDs[s.text] = s.id;
+              });
+              return sources;
+            }, function (rejected) {
+              return [];
+            }).then(this.uiSegmentSrv.transformToSegments(false));
             // Options have to be transformed by uiSegmentSrv to be usable by metric-segment-model directive
           }
         }, {
           key: 'onChangeInternal',
           value: function onChangeInternal() {
+            //console.log("onChangeInternal:", this.target.source);
             this.panelCtrl.refresh(); // Asks the panel to refresh data.
           }
         }]);
