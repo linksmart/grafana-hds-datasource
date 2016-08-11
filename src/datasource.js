@@ -73,8 +73,8 @@ export class GenericDatasource {
         var total = d.data.total; // total from data api
         var datapoints = parent.convertData(d.data, senmlFields);
         // append aggregate name to metric title
-        var aggregate = senmlFields.value=='v'? '' : '.'+senmlFields.value;
-        entries[idi].target = query.targets[idi].metric+aggregate;
+        var aggregate = senmlFields.value == 'v' ? '' : '.' + senmlFields.value;
+        entries[idi].target = query.targets[idi].metric + aggregate;
         entries[idi].datapoints = entries[idi].datapoints.concat(datapoints);
 
         if (total > entries[idi].datapoints.length) { // query the next page

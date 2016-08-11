@@ -3,13 +3,16 @@
 import {GenericDatasource} from './datasource';
 import {GenericDatasourceQueryCtrl} from './query_ctrl';
 
-class GenericConfigCtrl {}
+class GenericConfigCtrl {
+}
 GenericConfigCtrl.templateUrl = 'partials/config.html';
 
-class GenericQueryOptionsCtrl {}
+class GenericQueryOptionsCtrl {
+}
 GenericQueryOptionsCtrl.templateUrl = 'partials/query.options.html';
 
-class GenericAnnotationsQueryCtrl {}
+class GenericAnnotationsQueryCtrl {
+}
 GenericAnnotationsQueryCtrl.templateUrl = 'partials/annotations.editor.html'
 
 export {
