@@ -67,9 +67,10 @@ export class GenericDatasource {
         senmlFields.time = "ts";
       }
 
-      var id = query.targets[idi].metric.split(':')[0];
+      var shortID = query.targets[idi].metric.split(':')[0];
+      var uuid = query.targets[idi].UUIDs[shortID];
       return parent.backendSrv.datasourceRequest({
-        url: parent.url + "/" + apiEndpoint + id +
+        url: parent.url + "/" + apiEndpoint + uuid +
         '?start=' + query.range.from.toISOString() + '&end=' + query.range.to.toISOString() + '&page=' + page,
         data: query,
         method: 'GET'
@@ -134,7 +135,7 @@ export class GenericDatasource {
   // Convert registration from Registry API to the format required by Grafana
   convertMetrics(res) {
     return _.map(res.data.entries, (d, i) => {
-      return {text: d.id + ': ' + d.resource, value: i};
+      return {uuid: d.id, text: d.id + ': ' + d.resource, value: i};
     });
   }
 
@@ -147,9 +148,10 @@ export class GenericDatasource {
         reject("metric not selected");
       });
     }
-    var id = options.metric.split(':')[0];
+    var shortID = options.metric.split(':')[0];
+    var uuid = options.UUIDs[shortID];
     return this.backendSrv.datasourceRequest({
-      url: this.url + '/registry/' + id,
+      url: this.url + '/registry/' + uuid,
       method: 'GET',
       //headers: { 'Content-Type': 'application/json' }
     }).then(this.convertSources);
