@@ -49,26 +49,20 @@ export class GenericDatasource {
     var parent = this;
     // Recursively query all pages of every target
     function recursiveReq(page, idi) {
-      var source = query.targets[idi].source;
-      //console.log("source:", source, ":", query.targets[idi].sourceIDs[source]);
+      var target = query.targets[idi];
+      var source = target.source;
+      //console.log("source:", source, ":", query.targets[idi].Aggrs[source]);
       var apiEndpoint = "data/";
       var senmlFields = {value: "v", time: "t"};
       // Query for aggregation data
       if (!source.startsWith("value")) {
-        var aggrID = query.targets[idi].sourceIDs[source]
-        // retrieve the selected aggregate and interval
-        var re = /^([a-z]*), every ([0-9]*[s|m|h|w]).*$/g;
-        var m = re.exec(source);
-        var aggregate = m[1];
-        var interval = m[2];
-
-        apiEndpoint = "aggr/" + aggrID + "/";
-        senmlFields.value = aggregate;
+        apiEndpoint = "aggr/" + target.Aggrs[source].id + "/";
+        senmlFields.value = target.Aggrs[source].aggregate;
         senmlFields.time = "ts";
       }
 
-      var shortID = query.targets[idi].metric.split(':')[0];
-      var uuid = query.targets[idi].UUIDs[shortID];
+      var shortID = target.metric.substring(0, target.metric.indexOf(' : '));
+      var uuid = target.UUIDs[shortID];
       return parent.backendSrv.datasourceRequest({
         url: parent.url + "/" + apiEndpoint + uuid +
         '?start=' + query.range.from.toISOString() + '&end=' + query.range.to.toISOString() + '&page=' + page,
@@ -79,7 +73,7 @@ export class GenericDatasource {
         var datapoints = parent.convertData(d.data, senmlFields);
         // append aggregate name to metric title
         var aggregate = senmlFields.value == 'v' ? '' : '.' + senmlFields.value;
-        entries[idi].target = query.targets[idi].metric + aggregate;
+        entries[idi].target = target.metric + aggregate;
         entries[idi].datapoints = entries[idi].datapoints.concat(datapoints);
 
         if (total > entries[idi].datapoints.length) {
@@ -135,7 +129,7 @@ export class GenericDatasource {
   // Convert registration from Registry API to the format required by Grafana
   convertMetrics(res) {
     return _.map(res.data.entries, (d, i) => {
-      return {uuid: d.id, text: d.id + ': ' + d.resource, value: i};
+      return {uuid: d.id, text: d.id + ' : ' + d.resource, value: i};
     });
   }
 
@@ -148,7 +142,8 @@ export class GenericDatasource {
         reject("metric not selected");
       });
     }
-    var shortID = options.metric.split(':')[0];
+
+    var shortID = options.metric.substring(0, options.metric.indexOf(' : '));
     var uuid = options.UUIDs[shortID];
     return this.backendSrv.datasourceRequest({
       url: this.url + '/registry/' + uuid,
@@ -161,7 +156,7 @@ export class GenericDatasource {
   convertSources(res) {
     function formatRetention(retention) {
       if (retention == "") {
-        return ", no retention"; // ∞
+        return ", retention ∞"; // infinite retention
       }
       return ', retention ' + retention;
     }
@@ -176,6 +171,7 @@ export class GenericDatasource {
       var r2 = _.reduce(a.aggregates, (array, aggregate) => {
         array.push({
           id: a.id,
+          aggregate: aggregate,
           text: aggregate + ', every ' + a.interval + formatRetention(a.retention),
           value: index++
         });

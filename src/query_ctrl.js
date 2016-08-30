@@ -13,7 +13,7 @@ export class GenericDatasourceQueryCtrl extends QueryCtrl {
     this.target.metric = this.target.metric || 'select metric';
     this.target.source = this.target.source || 'select source';
     this.target.UUIDs = this.target.UUIDs || {};
-    this.target.sourceIDs = this.target.sourceIDs || {}; // aggregation ids
+    this.target.Aggrs = this.target.Aggrs || {}; // Aggregations
   }
 
   getOptions() {
@@ -40,7 +40,10 @@ export class GenericDatasourceQueryCtrl extends QueryCtrl {
       .then(function (sources) {
         // save a map of source->aggregation ids
         sources.forEach(function (s) {
-          that.target.sourceIDs[s.text] = s.id;
+          that.target.Aggrs[s.text] = {
+            id: s.id,
+            aggregate: s.aggregate
+          };
         });
         return sources;
       }, function (rejected) {
@@ -50,20 +53,20 @@ export class GenericDatasourceQueryCtrl extends QueryCtrl {
     // Options have to be transformed by uiSegmentSrv to be usable by metric-segment-model directive
   }
 
-  onChangeMetric() {
+  metricChanged() {
     console.log("onChangeInternal:", this.target.metric);
-    var uuid = this.target.metric.substring(0, this.target.metric.indexOf(':') + 1);
-    var name = this.target.metric.substring(this.target.metric.indexOf(':') + 1, this.target.metric.length);
-    console.log("onChangeInternal", uuid, name);
+    var uuid = this.target.metric.substring(0, this.target.metric.indexOf(' : '));
+    var name = this.target.metric.substring(this.target.metric.indexOf(' : ') + 3, this.target.metric.length);
+    console.log("onChangeInternal:" + uuid + name);
 
     // Change uuid to shortID i.e. the first 4 bytes of the uuid
-    this.target.metric = uuid.split('-')[0] + ':' + name;
+    this.target.metric = uuid.split('-')[0] + ' : ' + name;
     console.log("onChangeInternal:", this.target.metric);
 
     this.panelCtrl.refresh(); // Asks the panel to refresh data.
   }
 
-  onChangeSource() {
+  sourceChanged() {
     this.panelCtrl.refresh(); // Asks the panel to refresh data.
   }
 }
