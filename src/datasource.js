@@ -51,7 +51,6 @@ export class GenericDatasource {
     function recursiveReq(page, idi) {
       var target = query.targets[idi];
       var source = target.source;
-      //console.log("source:", source, ":", query.targets[idi].Aggrs[source]);
       var apiEndpoint = "data/";
       var senmlFields = {value: "v", time: "t"};
       // Query for aggregation data
@@ -61,8 +60,7 @@ export class GenericDatasource {
         senmlFields.time = "ts";
       }
 
-      var shortID = target.metric.substring(0, target.metric.indexOf(' : '));
-      var uuid = target.UUIDs[shortID];
+      var uuid = target.UUIDs[target.metric];
       return parent.backendSrv.datasourceRequest({
         url: parent.url + "/" + apiEndpoint + uuid +
         '?start=' + query.range.from.toISOString() + '&end=' + query.range.to.toISOString() + '&page=' + page,
@@ -129,7 +127,12 @@ export class GenericDatasource {
   // Convert registration from Registry API to the format required by Grafana
   convertMetrics(res) {
     return _.map(res.data.entries, (d, i) => {
-      return {uuid: d.id, text: d.id + ' : ' + d.resource, value: i};
+      return {
+        uuid: d.id,
+        legend: '(' + d.id.split('-')[0] + ') ' + d.resource, // (first 4 bytes of uuid) resource name
+        text: d.id + ' : ' + d.resource,
+        value: i
+      };
     });
   }
 
@@ -143,8 +146,7 @@ export class GenericDatasource {
       });
     }
 
-    var shortID = options.metric.substring(0, options.metric.indexOf(' : '));
-    var uuid = options.UUIDs[shortID];
+    var uuid = options.UUIDs[options.metric];
     return this.backendSrv.datasourceRequest({
       url: this.url + '/registry/' + uuid,
       method: 'GET',

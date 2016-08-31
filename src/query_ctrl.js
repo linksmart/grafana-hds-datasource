@@ -12,7 +12,9 @@ export class GenericDatasourceQueryCtrl extends QueryCtrl {
     this.uiSegmentSrv = uiSegmentSrv;
     this.target.metric = this.target.metric || 'select metric';
     this.target.source = this.target.source || 'select source';
+    // Stored for mapping
     this.target.UUIDs = this.target.UUIDs || {};
+    this.target.Legends = this.target.Legends || {};
     this.target.Aggrs = this.target.Aggrs || {}; // Aggregations
   }
 
@@ -20,13 +22,10 @@ export class GenericDatasourceQueryCtrl extends QueryCtrl {
     var that = this;
     return this.datasource.queryMetrics(this.target)
       .then(function (metrics) {
-        // save a map of shortID->uuid
-        // shortID is the first 4 bytes of the UUID
         metrics.forEach(function (m) {
-          var uuidSplit = m.uuid.split('-');
-          if (uuidSplit.length == 5) {
-            that.target.UUIDs[uuidSplit[0]] = m.uuid;
-          }
+          // Save mappings of uuid, text, and legend
+          that.target.UUIDs[m.legend] = m.uuid;
+          that.target.Legends[m.text] = m.legend;
         });
         return metrics;
       })
@@ -54,14 +53,10 @@ export class GenericDatasourceQueryCtrl extends QueryCtrl {
   }
 
   metricChanged() {
-    console.log("onChangeInternal:", this.target.metric);
-    var uuid = this.target.metric.substring(0, this.target.metric.indexOf(' : '));
-    var name = this.target.metric.substring(this.target.metric.indexOf(' : ') + 3, this.target.metric.length);
-    console.log("onChangeInternal:" + uuid + name);
-
-    // Change uuid to shortID i.e. the first 4 bytes of the uuid
-    this.target.metric = uuid.split('-')[0] + ' : ' + name;
-    console.log("onChangeInternal:", this.target.metric);
+    // Change the metric name to legend text: '(shortID) resourceName'
+    //  where shortID is the first 4 bytes of the uuid
+    // This will be used as DOM's property and graph's legend
+    this.target.metric = this.target.Legends[this.target.metric];
 
     this.panelCtrl.refresh(); // Asks the panel to refresh data.
   }
