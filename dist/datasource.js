@@ -85,27 +85,20 @@ System.register(['lodash'], function (_export, _context) {
             var parent = this;
             // Recursively query all pages of every target
             function recursiveReq(page, idi) {
-              var source = query.targets[idi].source;
-              //console.log("source:", source, ":", query.targets[idi].sourceIDs[source]);
+              var target = query.targets[idi];
+              var source = target.source;
               var apiEndpoint = "data/";
               var senmlFields = { value: "v", time: "t" };
               // Query for aggregation data
               if (!source.startsWith("value")) {
-                var aggrID = query.targets[idi].sourceIDs[source];
-                // retrieve the selected aggregate and interval
-                var re = /^([a-z]*), every ([0-9]*[s|m|h|w]).*$/g;
-                var m = re.exec(source);
-                var aggregate = m[1];
-                var interval = m[2];
-
-                apiEndpoint = "aggr/" + aggrID + "/";
-                senmlFields.value = aggregate;
+                apiEndpoint = "aggr/" + target.Aggrs[source].id + "/";
+                senmlFields.value = target.Aggrs[source].aggregate;
                 senmlFields.time = "ts";
               }
 
-              var id = query.targets[idi].metric.split(':')[0];
+              var uuid = target.UUIDs[target.metric];
               return parent.backendSrv.datasourceRequest({
-                url: parent.url + "/" + apiEndpoint + id + '?start=' + query.range.from.toISOString() + '&end=' + query.range.to.toISOString() + '&page=' + page,
+                url: parent.url + "/" + apiEndpoint + uuid + '?start=' + query.range.from.toISOString() + '&end=' + query.range.to.toISOString() + '&page=' + page,
                 data: query,
                 method: 'GET'
               }).then(function (d) {
@@ -113,7 +106,7 @@ System.register(['lodash'], function (_export, _context) {
                 var datapoints = parent.convertData(d.data, senmlFields);
                 // append aggregate name to metric title
                 var aggregate = senmlFields.value == 'v' ? '' : '.' + senmlFields.value;
-                entries[idi].target = query.targets[idi].metric + aggregate;
+                entries[idi].target = target.metric + aggregate;
                 entries[idi].datapoints = entries[idi].datapoints.concat(datapoints);
 
                 if (total > entries[idi].datapoints.length) {
@@ -166,7 +159,12 @@ System.register(['lodash'], function (_export, _context) {
           key: 'convertMetrics',
           value: function convertMetrics(res) {
             return _.map(res.data.entries, function (d, i) {
-              return { text: d.id + ': ' + d.resource, value: i };
+              return {
+                uuid: d.id,
+                legend: '(' + d.id.split('-')[0] + ') ' + d.resource, // (first 4 bytes of uuid) resource name
+                text: d.id + ' : ' + d.resource,
+                value: i
+              };
             });
           }
         }, {
@@ -178,9 +176,10 @@ System.register(['lodash'], function (_export, _context) {
                 reject("metric not selected");
               });
             }
-            var id = options.metric.split(':')[0];
+
+            var uuid = options.UUIDs[options.metric];
             return this.backendSrv.datasourceRequest({
-              url: this.url + '/registry/' + id,
+              url: this.url + '/registry/' + uuid,
               method: 'GET'
             }).then(this.convertSources);
           }
@@ -189,7 +188,7 @@ System.register(['lodash'], function (_export, _context) {
           value: function convertSources(res) {
             function formatRetention(retention) {
               if (retention == "") {
-                return ", no retention"; // ∞
+                return ", retention ∞"; // infinite retention
               }
               return ', retention ' + retention;
             }
@@ -204,6 +203,7 @@ System.register(['lodash'], function (_export, _context) {
               var r2 = _.reduce(a.aggregates, function (array, aggregate) {
                 array.push({
                   id: a.id,
+                  aggregate: aggregate,
                   text: aggregate + ', every ' + a.interval + formatRetention(a.retention),
                   value: index++
                 });

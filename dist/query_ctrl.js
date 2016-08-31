@@ -70,14 +70,25 @@ System.register(['app/plugins/sdk', './css/query-editor.css!'], function (_expor
           _this.uiSegmentSrv = uiSegmentSrv;
           _this.target.metric = _this.target.metric || 'select metric';
           _this.target.source = _this.target.source || 'select source';
-          _this.target.sourceIDs = _this.target.sourceIDs || {}; // aggregation ids
+          // Stored for mapping
+          _this.target.UUIDs = _this.target.UUIDs || {};
+          _this.target.Legends = _this.target.Legends || {};
+          _this.target.Aggrs = _this.target.Aggrs || {}; // Aggregations
           return _this;
         }
 
         _createClass(GenericDatasourceQueryCtrl, [{
           key: 'getOptions',
           value: function getOptions() {
-            return this.datasource.queryMetrics(this.target).then(this.uiSegmentSrv.transformToSegments(false));
+            var that = this;
+            return this.datasource.queryMetrics(this.target).then(function (metrics) {
+              metrics.forEach(function (m) {
+                // Save mappings of uuid, text, and legend
+                that.target.UUIDs[m.legend] = m.uuid;
+                that.target.Legends[m.text] = m.legend;
+              });
+              return metrics;
+            }).then(this.uiSegmentSrv.transformToSegments(false));
             // Options have to be transformed by uiSegmentSrv to be usable by metric-segment-model directive
           }
         }, {
@@ -87,7 +98,10 @@ System.register(['app/plugins/sdk', './css/query-editor.css!'], function (_expor
             return this.datasource.querySources(this.target).then(function (sources) {
               // save a map of source->aggregation ids
               sources.forEach(function (s) {
-                that.target.sourceIDs[s.text] = s.id;
+                that.target.Aggrs[s.text] = {
+                  id: s.id,
+                  aggregate: s.aggregate
+                };
               });
               return sources;
             }, function (rejected) {
@@ -96,9 +110,18 @@ System.register(['app/plugins/sdk', './css/query-editor.css!'], function (_expor
             // Options have to be transformed by uiSegmentSrv to be usable by metric-segment-model directive
           }
         }, {
-          key: 'onChangeInternal',
-          value: function onChangeInternal() {
-            //console.log("onChangeInternal:", this.target.source);
+          key: 'metricChanged',
+          value: function metricChanged() {
+            // Change the metric name to legend text: '(shortID) resourceName'
+            //  where shortID is the first 4 bytes of the uuid
+            // This will be used as DOM's property and graph's legend
+            this.target.metric = this.target.Legends[this.target.metric];
+
+            this.panelCtrl.refresh(); // Asks the panel to refresh data.
+          }
+        }, {
+          key: 'sourceChanged',
+          value: function sourceChanged() {
             this.panelCtrl.refresh(); // Asks the panel to refresh data.
           }
         }]);
