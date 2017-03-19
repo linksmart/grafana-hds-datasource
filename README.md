@@ -4,9 +4,10 @@ This is a [Grafana](http://grafana.org/) datasource plugin for [LinkSmart® Hist
 ### Deployment
 * Install [Grafana](http://grafana.org/download/). (Compatible with Grafana >3.x.x)
 
-* Clone the repository into Grafana plugins directory:
+* Clone the repository into Grafana's [plugin directory](http://docs.grafana.org/plugins/installation/#grafana-plugin-directory):
 
 ```
-git clone https://linksmart.eu/redmine/linksmart-opensource/linksmart-services/grafana-datasource.git
+git clone https://linksmart.eu/redmine/linksmart-opensource/linksmart-services/grafana-datasource.git linksmart-hds
 ```
+
 * Restart Grafana.

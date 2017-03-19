@@ -73,6 +73,7 @@ System.register(['app/plugins/sdk', './css/query-editor.css!'], function (_expor
           // Stored for mapping
           _this.target.UUIDs = _this.target.UUIDs || {};
           _this.target.Legends = _this.target.Legends || {};
+          _this.target.Types = _this.target.Types || {};
           _this.target.Aggrs = _this.target.Aggrs || {}; // Aggregations
           return _this;
         }
@@ -83,9 +84,10 @@ System.register(['app/plugins/sdk', './css/query-editor.css!'], function (_expor
             var that = this;
             return this.datasource.queryMetrics(this.target).then(function (metrics) {
               metrics.forEach(function (m) {
-                // Save mappings of uuid, text, and legend
+                // Save mappings of uuid, text, legend, and type
                 that.target.UUIDs[m.legend] = m.uuid;
                 that.target.Legends[m.text] = m.legend;
+                that.target.Types[m.legend] = m.type;
               });
               return metrics;
             }).then(this.uiSegmentSrv.transformToSegments(false));

@@ -27,8 +27,8 @@
       {"name": "Source Codes", "url": "https://linksmart.eu/redmine/projects/historical-datastore/repository/grafana-datasource"},
       {"name": "MIT License", "url": "https://github.com/grafana/simple-json-datasource/blob/master/LICENSE"}
     ],
-    "version": "0.2.1",
-    "updated": "2016-08-31"
+    "version": "0.2.2",
+    "updated": "2017-03-19"
   },
 
   "dependencies": {

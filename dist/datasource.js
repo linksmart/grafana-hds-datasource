@@ -88,7 +88,9 @@ System.register(['lodash'], function (_export, _context) {
               var target = query.targets[idi];
               var source = target.source;
               var apiEndpoint = "data/";
-              var senmlFields = { value: "v", time: "t" };
+              var senmlValues = { float: "v", string: "sv", bool: "bv" };
+              var senmlValue = senmlValues[target.Types[target.metric]];
+              var senmlFields = { value: senmlValue, time: "t" };
               // Query for aggregation data
               if (!source.startsWith("value")) {
                 apiEndpoint = "aggr/" + target.Aggrs[source].id + "/";
@@ -105,7 +107,7 @@ System.register(['lodash'], function (_export, _context) {
                 var total = d.data.total; // total from data api
                 var datapoints = parent.convertData(d.data, senmlFields);
                 // append aggregate name to metric title
-                var aggregate = senmlFields.value == 'v' ? '' : '.' + senmlFields.value;
+                var aggregate = senmlFields.value == senmlValue ? '' : '.' + senmlFields.value;
                 entries[idi].target = target.metric + aggregate;
                 entries[idi].datapoints = entries[idi].datapoints.concat(datapoints);
 
@@ -162,6 +164,7 @@ System.register(['lodash'], function (_export, _context) {
               return {
                 uuid: d.id,
                 legend: '(' + d.id.split('-')[0] + ') ' + d.resource, // (first 4 bytes of uuid) resource name
+                type: d.type,
                 text: d.id + ' : ' + d.resource,
                 value: i
               };
