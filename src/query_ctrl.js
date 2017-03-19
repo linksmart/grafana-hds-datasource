@@ -15,6 +15,7 @@ export class GenericDatasourceQueryCtrl extends QueryCtrl {
     // Stored for mapping
     this.target.UUIDs = this.target.UUIDs || {};
     this.target.Legends = this.target.Legends || {};
+    this.target.Types = this.target.Types || {};
     this.target.Aggrs = this.target.Aggrs || {}; // Aggregations
   }
 
@@ -23,9 +24,10 @@ export class GenericDatasourceQueryCtrl extends QueryCtrl {
     return this.datasource.queryMetrics(this.target)
       .then(function (metrics) {
         metrics.forEach(function (m) {
-          // Save mappings of uuid, text, and legend
+          // Save mappings of uuid, text, legend, and type
           that.target.UUIDs[m.legend] = m.uuid;
           that.target.Legends[m.text] = m.legend;
+          that.target.Types[m.legend] = m.type;
         });
         return metrics;
       })
