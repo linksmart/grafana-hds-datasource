@@ -155,6 +155,7 @@ System.register(['lodash'], function (_export, _context) {
               url: this.url + '/registry',
               data: options,
               method: 'GET'
+              //headers: { 'Content-Type': 'application/json' }
             }).then(this.convertMetrics);
           }
         }, {
@@ -184,6 +185,7 @@ System.register(['lodash'], function (_export, _context) {
             return this.backendSrv.datasourceRequest({
               url: this.url + '/registry/' + uuid,
               method: 'GET'
+              //headers: { 'Content-Type': 'application/json' }
             }).then(this.convertSources);
           }
         }, {
