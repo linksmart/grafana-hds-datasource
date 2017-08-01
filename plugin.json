@@ -16,19 +16,19 @@
     "description": "Grafana datasource plugin for LinkSmart® Historical Datastore",
     "author": {
       "name": "Fraunhofer FIT",
-      "url": "http://fit.fraunhofer.de/"
+      "url": "http://www.fit.fraunhofer.de/en.html"
     },
     "logos": {
       "small": "src/img/linksmartlogo.png",
       "large": "src/img/linksmartlogo.png"
     },
     "links": [
-      {"name": "Historical Datastore", "url": "https://linksmart.eu/redmine/projects/historical-datastore"},
-      {"name": "Source Codes", "url": "https://linksmart.eu/redmine/projects/historical-datastore/repository/grafana-datasource"},
-      {"name": "MIT License", "url": "https://github.com/grafana/simple-json-datasource/blob/master/LICENSE"}
+      {"name": "Historical Datastore", "url": "https://docs.linksmart.eu/display/HDS"},
+      {"name": "Source Codes", "url": "https://code.linksmart.eu/projects/HDS/repos/grafana-hds-datasource"},
+      {"name": "Apache License", "url": "https://code.linksmart.eu/projects/HDS/repos/grafana-hds-datasource/raw/LICENSE"}
     ],
-    "version": "0.2.2",
-    "updated": "2017-03-19"
+    "version": "0.3.0",
+    "updated": "2017-08-01"
   },
 
   "dependencies": {
