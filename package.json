@@ -29,7 +29,8 @@
     "grunt-mocha-test": "~0.12.7",
     "grunt-systemjs-builder": "^0.2.5",
     "jsdom": "~3.1.2",
-    "load-grunt-tasks": "^3.5.0",
+    "load-grunt-tasks": "^3.5.2",
+    "node-gyp": "^3.6.2",
     "prunk": "~1.2.1",
     "q": "~1.4.1"
   },
