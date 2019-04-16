@@ -47,18 +47,18 @@ export class GenericDatasource {
     });
 
     var parent = this;
+    const apiEndpoint = "data/";
+    var senmlValues = {float: "v", string: "sv", bool: "bv"}
+
     // Recursively query all pages of every target
     function recursiveReq(idi,url) {
       var target = query.targets[idi];
-      var source = target.source;
-      var apiEndpoint = "data/";
-      var senmlValues = {float: "v", string: "sv", bool: "bv"}
       var senmlValue = senmlValues[target.Types[target.metric]];
       var senmlFields = {value: senmlValue, time: "t"};
 
       if (url == ""){
         url = parent.url + "/" + apiEndpoint + target.metric +
-        '?start=' + query.range.from.toISOString() + '&end=' + query.range.to.toISOString()
+        '?from=' + query.range.from.toISOString() + '&to=' + query.range.to.toISOString()
       }else{
         url = parent.url + url
       }
@@ -70,9 +70,8 @@ export class GenericDatasource {
         var nextlink = d.data.nextLink; 
         var datapoints = parent.convertData(d.data, senmlFields);
         // append aggregate name to metric title
-        //var aggregate = senmlFields.value == senmlValue ? '' : '.' + senmlFields.value;
-        entries[idi].target = target.metric //+ aggregate;
-        entries[idi].datapoints = entries[idi].datapoints.concat(datapoints);
+        entries[idi].target = target.metric 
+        entries[idi].datapoints.push(...datapoints);
 
         if (nextlink != "") {
           // query the next page
@@ -94,11 +93,13 @@ export class GenericDatasource {
 
   // Convert historical SenML data from Data/Aggr API to Grafana datapoints
   convertData(data, senmlFields) {
-    var datapoints = Array(data.data.length);
+    /*var datapoints = Array(data.data.length);
     for (var i = 0; i < data.data.length; i++) {
       datapoints[i] = [data.data[i][senmlFields.value], data.data[i][senmlFields.time] * 1000];
-    }
-
+    }*/
+    var datapoints = _.map(data.data, entry => {
+      return [entry[senmlFields.value], entry[senmlFields.time] * 1000];
+    });
     return datapoints;
   }
 

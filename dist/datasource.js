@@ -5,6 +5,18 @@ System.register(['lodash'], function (_export, _context) {
 
   var _, _createClass, GenericDatasource;
 
+  function _toConsumableArray(arr) {
+    if (Array.isArray(arr)) {
+      for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) {
+        arr2[i] = arr[i];
+      }
+
+      return arr2;
+    } else {
+      return Array.from(arr);
+    }
+  }
+
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
       throw new TypeError("Cannot call a class as a function");
@@ -83,17 +95,17 @@ System.register(['lodash'], function (_export, _context) {
             });
 
             var parent = this;
-            // Recursively query all pages of every target
-            function recursiveReq(idi, url) {
+            var apiEndpoint = "data/";
+            var senmlValues = { float: "v", string: "sv", bool: "bv"
+
+              // Recursively query all pages of every target
+            };function recursiveReq(idi, url) {
               var target = query.targets[idi];
-              var source = target.source;
-              var apiEndpoint = "data/";
-              var senmlValues = { float: "v", string: "sv", bool: "bv" };
               var senmlValue = senmlValues[target.Types[target.metric]];
               var senmlFields = { value: senmlValue, time: "t" };
 
               if (url == "") {
-                url = parent.url + "/" + apiEndpoint + target.metric + '?start=' + query.range.from.toISOString() + '&end=' + query.range.to.toISOString();
+                url = parent.url + "/" + apiEndpoint + target.metric + '?from=' + query.range.from.toISOString() + '&to=' + query.range.to.toISOString();
               } else {
                 url = parent.url + url;
               }
@@ -102,12 +114,13 @@ System.register(['lodash'], function (_export, _context) {
                 data: query,
                 method: 'GET'
               }).then(function (d) {
+                var _entries$idi$datapoin;
+
                 var nextlink = d.data.nextLink;
                 var datapoints = parent.convertData(d.data, senmlFields);
                 // append aggregate name to metric title
-                //var aggregate = senmlFields.value == senmlValue ? '' : '.' + senmlFields.value;
-                entries[idi].target = target.metric; //+ aggregate;
-                entries[idi].datapoints = entries[idi].datapoints.concat(datapoints);
+                entries[idi].target = target.metric;
+                (_entries$idi$datapoin = entries[idi].datapoints).push.apply(_entries$idi$datapoin, _toConsumableArray(datapoints));
 
                 if (nextlink != "") {
                   // query the next page
@@ -128,11 +141,13 @@ System.register(['lodash'], function (_export, _context) {
         }, {
           key: 'convertData',
           value: function convertData(data, senmlFields) {
-            var datapoints = Array(data.data.length);
+            /*var datapoints = Array(data.data.length);
             for (var i = 0; i < data.data.length; i++) {
               datapoints[i] = [data.data[i][senmlFields.value], data.data[i][senmlFields.time] * 1000];
-            }
-
+            }*/
+            var datapoints = _.map(data.data, function (entry) {
+              return [entry[senmlFields.value], entry[senmlFields.time] * 1000];
+            });
             return datapoints;
           }
         }, {
