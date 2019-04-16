@@ -1,9 +1,9 @@
 <query-editor-row query-ctrl="ctrl" class="generic-datasource-query-row">
   <div class="gf-form-inline" ng-hide="ctrl.target.rawQuery">
-    <label class="gf-form-label query-keyword width-7">
-      Metric
-    </label>
-    <metric-segment-model property="ctrl.target.metric" get-options="ctrl.getOptions()"
-                          on-change="ctrl.metricChanged()" css-class=""></metric-segment-model>
+          <label class="gf-form-label  query-keyword width-7">
+            Metric
+          </label>
+          <metric-segment-model class="gf-form-label--grow" property="ctrl.target.metric" get-options="ctrl.getOptions()"
+                                on-change="ctrl.metricChanged()" css-class=""></metric-segment-model>
   </div>
 </query-editor-row>
