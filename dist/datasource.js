@@ -53,7 +53,7 @@ System.register(['lodash'], function (_export, _context) {
           key: 'testDatasource',
           value: function testDatasource() {
             return this.backendSrv.datasourceRequest({
-              url: this.url + '/',
+              url: this.url + '/health',
               method: 'GET'
             }).then(function (response) {
               if (response.status === 200) {
@@ -84,39 +84,37 @@ System.register(['lodash'], function (_export, _context) {
 
             var parent = this;
             // Recursively query all pages of every target
-            function recursiveReq(page, idi) {
+            function recursiveReq(idi, url) {
               var target = query.targets[idi];
               var source = target.source;
               var apiEndpoint = "data/";
               var senmlValues = { float: "v", string: "sv", bool: "bv" };
               var senmlValue = senmlValues[target.Types[target.metric]];
               var senmlFields = { value: senmlValue, time: "t" };
-              // Query for aggregation data
-              if (!source.startsWith("value")) {
-                apiEndpoint = "aggr/" + target.Aggrs[source].id + "/";
-                senmlFields.value = target.Aggrs[source].aggregate;
-                senmlFields.time = "ts";
-              }
 
-              var uuid = target.UUIDs[target.metric];
+              if (url == "") {
+                url = parent.url + "/" + apiEndpoint + target.metric + '?start=' + query.range.from.toISOString() + '&end=' + query.range.to.toISOString();
+              } else {
+                url = parent.url + url;
+              }
               return parent.backendSrv.datasourceRequest({
-                url: parent.url + "/" + apiEndpoint + uuid + '?start=' + query.range.from.toISOString() + '&end=' + query.range.to.toISOString() + '&page=' + page,
+                url: url,
                 data: query,
                 method: 'GET'
               }).then(function (d) {
-                var total = d.data.total; // total from data api
+                var nextlink = d.data.nextLink;
                 var datapoints = parent.convertData(d.data, senmlFields);
                 // append aggregate name to metric title
-                var aggregate = senmlFields.value == senmlValue ? '' : '.' + senmlFields.value;
-                entries[idi].target = target.metric + aggregate;
+                //var aggregate = senmlFields.value == senmlValue ? '' : '.' + senmlFields.value;
+                entries[idi].target = target.metric; //+ aggregate;
                 entries[idi].datapoints = entries[idi].datapoints.concat(datapoints);
 
-                if (total > entries[idi].datapoints.length) {
+                if (nextlink != "") {
                   // query the next page
-                  return recursiveReq(++page, idi);
+                  return recursiveReq(idi, nextlink);
                 } else if (idi < query.targets.length - 1) {
                   // one target done, query the next target
-                  return recursiveReq(1, ++idi);
+                  return recursiveReq(++idi, "");
                 } else {
                   // all done
                   d.data = entries;
@@ -125,15 +123,14 @@ System.register(['lodash'], function (_export, _context) {
               });
             } // end func
 
-            // Start from page 1, id 0
-            return recursiveReq(1, 0);
+            return recursiveReq(0, "");
           }
         }, {
           key: 'convertData',
           value: function convertData(data, senmlFields) {
-            var datapoints = Array(data.data.e.length);
-            for (var i = 0; i < data.data.e.length; i++) {
-              datapoints[i] = [data.data.e[i][senmlFields.value], data.data.e[i][senmlFields.time] * 1000];
+            var datapoints = Array(data.data.length);
+            for (var i = 0; i < data.data.length; i++) {
+              datapoints[i] = [data.data[i][senmlFields.value], data.data[i][senmlFields.time] * 1000];
             }
 
             return datapoints;
@@ -142,7 +139,7 @@ System.register(['lodash'], function (_export, _context) {
           key: 'filterPlaceholders',
           value: function filterPlaceholders(options) {
             options.targets = _.filter(options.targets, function (target) {
-              return target.metric !== 'select metric' && target.source !== 'select source';
+              return target.metric !== 'select metric';
             });
 
             return options;
@@ -161,66 +158,13 @@ System.register(['lodash'], function (_export, _context) {
         }, {
           key: 'convertMetrics',
           value: function convertMetrics(res) {
-            return _.map(res.data.entries, function (d, i) {
+            return _.map(res.data.streams, function (d, i) {
               return {
-                uuid: d.id,
-                legend: '(' + d.id.split('-')[0] + ') ' + d.resource, // (first 4 bytes of uuid) resource name
-                type: d.type,
-                text: d.id + ' : ' + d.resource,
+                type: d.datatype,
+                text: d.name,
                 value: i
               };
             });
-          }
-        }, {
-          key: 'querySources',
-          value: function querySources(options) {
-            // Metric is not selected
-            if (options.metric == 'select metric') {
-              return new Promise(function (resolve, reject) {
-                reject("metric not selected");
-              });
-            }
-
-            var uuid = options.UUIDs[options.metric];
-            return this.backendSrv.datasourceRequest({
-              url: this.url + '/registry/' + uuid,
-              method: 'GET'
-              //headers: { 'Content-Type': 'application/json' }
-            }).then(this.convertSources);
-          }
-        }, {
-          key: 'convertSources',
-          value: function convertSources(res) {
-            function formatRetention(retention) {
-              if (retention == "") {
-                return ", retention ∞"; // infinite retention
-              }
-              return ', retention ' + retention;
-            }
-
-            var index = 0;
-            // raw un-aggregated data
-            var value = { id: 'value', text: 'value' + formatRetention(res.data.retention), value: index++ };
-            // Flatten aggregations of a target (datasource)
-            // start with 'value' as input and concatenate flattened aggregates
-            var r = _.reduce(res.data.aggregation, function (input, a) {
-              // Flatten and format aggregates
-              var r2 = _.reduce(a.aggregates, function (array, aggregate) {
-                array.push({
-                  id: a.id,
-                  aggregate: aggregate,
-                  text: aggregate + ', every ' + a.interval + formatRetention(a.retention),
-                  value: index++
-                });
-                return array;
-              }, []);
-
-              return input.concat(r2);
-            }, [value]);
-
-            // sort aggregates
-            r = [r[0]].concat(_.sortBy(r.slice(1, r.length), 'text'));
-            return r;
           }
         }]);
 

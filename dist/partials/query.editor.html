@@ -6,11 +6,4 @@
     <metric-segment-model property="ctrl.target.metric" get-options="ctrl.getOptions()"
                           on-change="ctrl.metricChanged()" css-class=""></metric-segment-model>
   </div>
-  <div class="gf-form-inline" ng-hide="ctrl.target.rawQuery">
-    <label class="gf-form-label query-keyword width-7">
-      Source
-    </label>
-    <metric-segment-model property="ctrl.target.source" get-options="ctrl.getSources()"
-                          on-change="ctrl.sourceChanged()" css-class=""></metric-segment-model>
-  </div>
 </query-editor-row>
