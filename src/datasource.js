@@ -47,11 +47,12 @@ export class GenericDatasource {
     });
 
     var parent = this;
-    const apiEndpoint = "data/";
-    var senmlValues = {float: "v", string: "sv", bool: "bv"}
 
+    const apiEndpoint = "data/";
+    const senmlValues = {float: "v", string: "sv", bool: "bv"}
     // Recursively query all pages of every target
     function recursiveReq(idi,url) {
+
       var target = query.targets[idi];
       var senmlValue = senmlValues[target.Types[target.metric]];
       var senmlFields = {value: senmlValue, time: "t"};
@@ -128,7 +129,7 @@ export class GenericDatasource {
   convertMetrics(res) {
     return _.map(res.data.streams, (d, i) => {
       return {
-        type: d.datatype,
+        type: d.dataType,
         text: d.name,
         value: i
       };
