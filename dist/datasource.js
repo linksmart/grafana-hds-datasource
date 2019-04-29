@@ -163,13 +163,33 @@ System.register(['lodash'], function (_export, _context) {
         }, {
           key: 'queryMetrics',
           value: function queryMetrics(options) {
-            return this.backendSrv.datasourceRequest({
-              //url: this.url + '/search',
-              url: this.url + '/registry',
-              data: options,
-              method: 'GET'
-              //headers: { 'Content-Type': 'application/json' }
-            }).then(this.convertMetrics);
+            var metrics = [];
+            var parent = this;
+            function recursiveMetricReq(page) {
+              console.log(page);
+              return parent.backendSrv.datasourceRequest({
+                //url: this.url + '/search',
+                url: parent.url + '/registry?page=' + page,
+                data: options,
+                method: 'GET'
+                //headers: { 'Content-Type': 'application/json' }
+              }).then(function (res) {
+                var total = res.data.total; // total from data api
+                metrics.push.apply(metrics, _toConsumableArray(parent.convertMetrics(res)));
+                if (total > metrics.length) {
+                  // query the next page
+                  return recursiveMetricReq(++page);
+                } else {
+                  console.log(total);
+                  console.log(metrics.length);
+                  //metrics.forEach(function(entry) {
+                  //  console.log(entry.text);
+                  //});
+                  return metrics;
+                }
+              });
+            }
+            return recursiveMetricReq(1);
           }
         }, {
           key: 'convertMetrics',
