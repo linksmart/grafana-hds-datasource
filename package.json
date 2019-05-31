@@ -1,20 +1,20 @@
 {
-  "name": "kentik-app",
+  "name": "grafana-hds-datasource",
   "private": true,
   "version": "1.0.0",
-  "description": "",
+  "description": "Grafana datasource for Linksmart Historical datastore",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/raintank/kentik-app-poc.git"
+    "url": "git+https://github.com/linksmart/grafana-hds-datasource.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/raintank/kentik-app-poc/issues"
+    "url": "https://github.com/linksmart/grafana-hds-datasource/issues"
   },
   "devDependencies": {
     "babel": "~6.23.0",
