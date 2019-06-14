@@ -1,9 +1,7 @@
 {
-  "name": "LinkSmart HDS",
+  "name": "LinkSmart HDS Datasource",
   "id": "linksmart-hds-datasource",
   "type": "datasource",
-
-  "staticRoot": ".",
 
   "partials": {
     "config": "public/app/plugins/datasource/linksmart-hds-datasource/partials/config.html"
@@ -12,6 +10,7 @@
   "metrics": true,
   "annotations": false,
 
+ 
   "info": {
     "description": "Grafana datasource plugin for LinkSmart Historical Datastore",
     "author": {
@@ -19,16 +18,16 @@
       "url": "http://www.fit.fraunhofer.de/en.html"
     },
     "logos": {
-      "small": "src/img/linksmartlogo.png",
-      "large": "src/img/linksmartlogo.png"
+      "small": "img/linksmartlogo.png",
+      "large": "img/linksmartlogo.png"
     },
     "links": [
       {"name": "Historical Datastore", "url": "https://docs.linksmart.eu/display/HDS"},
-      {"name": "Source Codes", "url": "https://code.linksmart.eu/projects/HDS/repos/grafana-hds-datasource"},
-      {"name": "Apache License", "url": "https://code.linksmart.eu/projects/HDS/repos/grafana-hds-datasource/raw/LICENSE"}
+      {"name": "Source Codes", "url": "https://github.com/linksmart/grafana-hds-datasource"},
+      {"name": "Apache License", "url": "https://raw.githubusercontent.com/linksmart/grafana-hds-datasource/master/LICENSE"}
     ],
-    "version": "1.0.0-beta.1",
-    "updated": "2019-04-16"
+    "version": "1.0.0", 
+    "updated": "2019-05-31"
   },
 
   "dependencies": {

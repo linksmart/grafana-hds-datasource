@@ -4,7 +4,6 @@ module.exports = function(grunt) {
 
   grunt.loadNpmTasks('grunt-execute');
   grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-contrib-watch');
 
   grunt.initConfig({
 
@@ -14,25 +13,19 @@ module.exports = function(grunt) {
       src_to_dist: {
         cwd: 'src',
         expand: true,
-        src: ['**/*', '!**/*.js', '!**/*.scss', '!img/*'],
+        src: ['**/*', '!**/*.js', '!**/*.scss'],
         dest: 'dist'
-      },
-      img_to_dist: {
-        cwd: 'src',
-        expand: true,
-        src: ['img/*'],
-        dest: 'dist/src/'
       },
       pluginDef: {
         expand: true,
-        src: [ 'plugin.json', 'README.md' ],
+        src: ['README.md'],
         dest: 'dist'
       }
     },
 
     watch: {
       rebuild_all: {
-        files: ['src/**/*', 'plugin.json'],
+        files: ['src/**/*'],
         tasks: ['default'],
         options: {spawn: false}
       }
@@ -41,12 +34,10 @@ module.exports = function(grunt) {
     babel: {
       options: {
         sourceMap: true,
-        presets:  ['es2015']
+        presets:  ['env'],
+        plugins: ['transform-object-rest-spread']
       },
       dist: {
-        options: {
-          plugins: ['transform-es2015-modules-systemjs', 'transform-es2015-for-of']
-        },
         files: [{
           cwd: 'src',
           expand: true,
@@ -74,6 +65,7 @@ module.exports = function(grunt) {
         }]
       }
     },
+
     mochaTest: {
       test: {
         options: {
@@ -84,5 +76,5 @@ module.exports = function(grunt) {
     }
   });
 
-  grunt.registerTask('default', ['clean', 'copy:src_to_dist','copy:img_to_dist', 'copy:pluginDef', 'babel'/*, 'mochaTest'*/]);
+  grunt.registerTask('default', ['clean', 'copy:src_to_dist', 'copy:pluginDef', 'babel', 'mochaTest']);
 };

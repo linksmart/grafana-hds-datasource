@@ -1,15 +1,19 @@
-// Copyright 2016 Fraunhofer Institute for Applied Information Technology FIT
-
 import _ from "lodash";
 
 export class GenericDatasource {
 
-  constructor(instanceSettings, $q, backendSrv) {
+  constructor(instanceSettings, $q, backendSrv, templateSrv) {
     this.type = instanceSettings.type;
     this.url = instanceSettings.url;
     this.name = instanceSettings.name;
     this.q = $q;
     this.backendSrv = backendSrv;
+    this.templateSrv = templateSrv;
+    this.withCredentials = instanceSettings.withCredentials;
+    this.headers = {'Content-Type': 'application/json'};
+    if (typeof instanceSettings.basicAuth === 'string' && instanceSettings.basicAuth.length > 0) {
+      this.headers['Authorization'] = instanceSettings.basicAuth;
+    }
   }
 
   // Required
@@ -37,10 +41,10 @@ export class GenericDatasource {
     });
 
     // All targets filtered OR no metric selected
-    if (query.targets.length == 0 || !('metric' in query.targets[0])) {
-      return {data: []}; // return this.q.when([]);
+    if (query.targets.length <= 0 || !('metric' in query.targets[0])) {
+      return this.q.when([]);
     }
-
+ 
     // Make a new array with zero-valued object fields
     var entries = Array.apply(null, Array(query.targets.length)).map(function () {
       return {target: '', datapoints: []};
@@ -54,7 +58,7 @@ export class GenericDatasource {
     function recursiveReq(idi,url) {
 
       var target = query.targets[idi];
-      var senmlValue = senmlValues[target.Types[target.metric]];
+      var senmlValue = senmlValues[target.datatypes[target.metric]];
       var senmlFields = {value: senmlValue, time: "t"};
 
       if (url == ""){
@@ -70,7 +74,7 @@ export class GenericDatasource {
       }).then(function (d) {
         var nextlink = d.data.nextLink; 
         var datapoints = parent.convertData(d.data, senmlFields);
-        // append aggregate name to metric title
+     
         entries[idi].target = target.metric 
         entries[idi].datapoints.push(...datapoints);
 
@@ -119,7 +123,6 @@ export class GenericDatasource {
     var metrics = []
     var parent = this;
     function recursiveMetricReq(page) {
-      console.log( page);
       return parent.backendSrv.datasourceRequest({
         //url: this.url + '/search',
         url: parent.url + '/registry?page='+page,
@@ -150,11 +153,12 @@ export class GenericDatasource {
   convertMetrics(res) {
     return _.map(res.data.streams, (d, i) => {
       return {
-        type: d.dataType,
+        datatype: d.dataType,
         text: d.name,
         value: i
       };
     });
   }
- 
+
+
 }
