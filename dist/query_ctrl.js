@@ -27,21 +27,14 @@ var GenericDatasourceQueryCtrl = exports.GenericDatasourceQueryCtrl = function (
 
     _this.scope = $scope;
     _this.uiSegmentSrv = uiSegmentSrv;
-    _this.target.metric = _this.target.metric || 'select metric';
-    _this.target.datatypes = _this.target.datatype || {};
+    _this.target.metric = _this.target.metric || 'select datastream';
     return _this;
   }
 
   _createClass(GenericDatasourceQueryCtrl, [{
     key: 'getOptions',
     value: function getOptions(query) {
-      var that = this;
-      return this.datasource.queryMetrics(this.target).then(function (metrics) {
-        metrics.forEach(function (m) {
-          that.target.datatypes[m.text] = m.datatype;
-        });
-        return metrics;
-      }).then(this.uiSegmentSrv.transformToSegments(false));
+      return this.datasource.queryMetrics(this.target).then(this.uiSegmentSrv.transformToSegments(false));
       // Options have to be transformed by uiSegmentSrv to be usable by metric-segment-model directive
     }
   }, {

@@ -1,26 +1,14 @@
 {
-  "name": "grafana-hds-datasource",
+  "name": "linksmart-hds-datasource",
   "private": true,
-  "description": "Grafana datasource for Linksmart Historical datastore",
-  "main": "index.js",
   "scripts": {
     "build": "grunt",
     "test": "grunt mochaTest"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/linksmart/grafana-hds-datasource.git"
-  },
-  "author": "",
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/linksmart/grafana-hds-datasource/issues"
-  },
   "engineStrict": true,
   "devDependencies": {
-    "babel": "^6.23.0",
-    "babel-preset-env": "^1.7.0",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
     "chai": "~3.5.0",
     "grunt": "^1.0.1",
     "grunt-babel": "~6.0.0",
@@ -34,16 +22,11 @@
     "grunt-systemjs-builder": "^1.0.0",
     "jsdom": "~9.12.0",
     "load-grunt-tasks": "^3.5.2",
-    "mocha": "^3.2.0",
+    "mocha": "^6.1.4",
     "prunk": "^1.3.0",
     "q": "^1.5.0"
   },
   "dependencies": {
     "lodash": "^4.17.4"
-  },
-  "homepage": "https://github.com/linksmart/grafana-hds-datasource/blob/master/README.md",
-  "directories": {
-    "doc": "docs"
-  },
-  "keywords": []
+  }
 }

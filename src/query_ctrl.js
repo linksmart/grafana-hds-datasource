@@ -8,19 +8,11 @@ export class GenericDatasourceQueryCtrl extends QueryCtrl {
 
     this.scope = $scope;
     this.uiSegmentSrv = uiSegmentSrv;
-    this.target.metric = this.target.metric || 'select metric';
-    this.target.datatypes = this.target.datatype || {};
+    this.target.metric = this.target.metric || 'select datastream';
   }
 
   getOptions(query) {
-     var that = this;
     return this.datasource.queryMetrics(this.target)
-      .then(function (metrics) {
-        metrics.forEach(function (m) {
-          that.target.datatypes[m.text] = m.datatype;
-        });
-        return metrics;
-      })
      .then(this.uiSegmentSrv.transformToSegments(false));
     // Options have to be transformed by uiSegmentSrv to be usable by metric-segment-model directive
   }

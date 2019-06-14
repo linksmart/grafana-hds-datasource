@@ -44,7 +44,6 @@ Source | The measurement, aggregates, and retention policy (Preconfigured at HDS
 
 ### Build the source
 ```
-npm install -g yarn
-yarn install
-npm run build
+npm install 
+grunt
 ```

@@ -78,13 +78,10 @@ var GenericDatasource = exports.GenericDatasource = function () {
       var parent = this;
 
       var apiEndpoint = "data/";
-      var senmlValues = { float: "v", string: "sv", bool: "bv"
-        // Recursively query all pages of every target
-      };function recursiveReq(idi, url) {
+
+      function recursiveReq(idi, url) {
 
         var target = query.targets[idi];
-        var senmlValue = senmlValues[target.datatypes[target.metric]];
-        var senmlFields = { value: senmlValue, time: "t" };
 
         if (url == "") {
           url = parent.url + "/" + apiEndpoint + target.metric + '?from=' + query.range.from.toISOString() + '&to=' + query.range.to.toISOString();
@@ -99,7 +96,7 @@ var GenericDatasource = exports.GenericDatasource = function () {
           var _entries$idi$datapoin;
 
           var nextlink = d.data.nextLink;
-          var datapoints = parent.convertData(d.data, senmlFields);
+          var datapoints = parent.convertData(d.data);
 
           entries[idi].target = target.metric;
           (_entries$idi$datapoin = entries[idi].datapoints).push.apply(_entries$idi$datapoin, _toConsumableArray(datapoints));
@@ -125,13 +122,11 @@ var GenericDatasource = exports.GenericDatasource = function () {
 
   }, {
     key: 'convertData',
-    value: function convertData(data, senmlFields) {
-      /*var datapoints = Array(data.data.length);
-      for (var i = 0; i < data.data.length; i++) {
-        datapoints[i] = [data.data[i][senmlFields.value], data.data[i][senmlFields.time] * 1000];
-      }*/
+    value: function convertData(data) {
+
       var datapoints = _lodash2.default.map(data.data, function (entry) {
-        return [entry[senmlFields.value], entry[senmlFields.time] * 1000];
+        var value = entry["v"] || entry["sv"] || entry["bv"]; //take float or string or bool
+        return [value, entry["t"] * 1000];
       });
       return datapoints;
     }
@@ -142,7 +137,7 @@ var GenericDatasource = exports.GenericDatasource = function () {
     key: 'filterPlaceholders',
     value: function filterPlaceholders(options) {
       options.targets = _lodash2.default.filter(options.targets, function (target) {
-        return target.metric !== 'select metric';
+        return target.metric !== 'select datastream';
       });
 
       return options;
@@ -170,11 +165,6 @@ var GenericDatasource = exports.GenericDatasource = function () {
             // query the next page
             return recursiveMetricReq(++page);
           } else {
-            console.log(total);
-            console.log(metrics.length);
-            //metrics.forEach(function(entry) {
-            //  console.log(entry.text);
-            //});
             return metrics;
           }
         });
@@ -189,7 +179,6 @@ var GenericDatasource = exports.GenericDatasource = function () {
     value: function convertMetrics(res) {
       return _lodash2.default.map(res.data.streams, function (d, i) {
         return {
-          datatype: d.dataType,
           text: d.name,
           value: i
         };

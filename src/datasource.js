@@ -53,13 +53,10 @@ export class GenericDatasource {
     var parent = this;
 
     const apiEndpoint = "data/";
-    const senmlValues = {float: "v", string: "sv", bool: "bv"}
-    // Recursively query all pages of every target
+
     function recursiveReq(idi,url) {
 
       var target = query.targets[idi];
-      var senmlValue = senmlValues[target.datatypes[target.metric]];
-      var senmlFields = {value: senmlValue, time: "t"};
 
       if (url == ""){
         url = parent.url + "/" + apiEndpoint + target.metric +
@@ -73,7 +70,7 @@ export class GenericDatasource {
         method: 'GET'
       }).then(function (d) {
         var nextlink = d.data.nextLink; 
-        var datapoints = parent.convertData(d.data, senmlFields);
+        var datapoints = parent.convertData(d.data);
      
         entries[idi].target = target.metric 
         entries[idi].datapoints.push(...datapoints);
@@ -97,13 +94,11 @@ export class GenericDatasource {
   }
 
   // Convert historical SenML data from Data/Aggr API to Grafana datapoints
-  convertData(data, senmlFields) {
-    /*var datapoints = Array(data.data.length);
-    for (var i = 0; i < data.data.length; i++) {
-      datapoints[i] = [data.data[i][senmlFields.value], data.data[i][senmlFields.time] * 1000];
-    }*/
+  convertData(data) {
+    
     var datapoints = _.map(data.data, entry => {
-      return [entry[senmlFields.value], entry[senmlFields.time] * 1000];
+      var value = entry["v"] || entry["sv"] ||entry["bv"] //take float or string or bool
+      return [value, entry["t"] * 1000];
     });
     return datapoints;
   }
@@ -111,7 +106,7 @@ export class GenericDatasource {
   // Remove targets that have unselected metric or source
   filterPlaceholders(options) {
     options.targets = _.filter(options.targets, target => {
-      return target.metric !== 'select metric';
+      return target.metric !== 'select datastream';
     });
 
     return options;
@@ -136,11 +131,6 @@ export class GenericDatasource {
           // query the next page
           return recursiveMetricReq(++page);
         } else {
-          console.log( total);
-          console.log( metrics.length);
-          //metrics.forEach(function(entry) {
-          //  console.log(entry.text);
-          //});
           return metrics;
         }
 
@@ -153,7 +143,6 @@ export class GenericDatasource {
   convertMetrics(res) {
     return _.map(res.data.streams, (d, i) => {
       return {
-        datatype: d.dataType,
         text: d.name,
         value: i
       };
