@@ -1,7 +1,7 @@
 # LinkSmart HDS - Grafana Datasource Plugin
-[Grafana](http://grafana.org/) datasource plugin for [LinkSmart® Historical Datastore (HDS)](https://docs.linksmart.eu/display/HDS).
+[Grafana](http://grafana.org/) datasource plugin for [LinkSmart Historical Datastore (HDS)](https://docs.linksmart.eu/display/HDS).
 
-## Deployment
+## Installation
 
 ### Install via grafana-cli
 ```
@@ -12,14 +12,14 @@ sudo grafana-cli plugins install linksmart-hds-datasource
 
 * Clone the repository into Grafana's [plugin directory](http://docs.grafana.org/plugins/installation/#grafana-plugin-directory):
 ```
-git clone https://code.linksmart.eu/scm/hds/grafana-hds-datasource.git linksmart-hds
+git clone https://github.com/linksmart/grafana-hds-datasource.git linksmart-hds
 ```
 * Restart Grafana.
 
 ## Configuration
 
 ### Plugin Configuration
-![](https://code.linksmart.eu/projects/HDS/repos/grafana-hds-datasource/raw/docs/datasource_config.png)
+![](https://raw.githubusercontent.com/linksmart/grafana-hds-datasource/master/docs/datasource_config.png)
 
 
 Name | Description
@@ -32,7 +32,7 @@ Access | Proxy: Let Grafana server proxy the requests to HDS. / Direct: Send req
 Basic Auth | Authenticate to HDS (if required, provide User and Password)
 
 ### Query Configuration
-![](https://code.linksmart.eu/projects/HDS/repos/grafana-hds-datasource/raw/docs/query_metrics.png)
+![](https://raw.githubusercontent.com/linksmart/grafana-hds-datasource/master/docs/query_metrics.png)
 
 
 Name | Description
