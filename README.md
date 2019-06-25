@@ -34,7 +34,7 @@ Name | Description
 Name | The data source name.
 Default | Set this as the default plugin for new panels.
 Url | The URL of the HDS instance. (Default port is 8085)
-Access | Server (Default): Let Grafana server proxy the requests to HDS. <br> Browser: Send requests directly from client browser.
+Access | Server (Default): Let Grafana server proxy the requests to HDS. \\  Browser: Send requests directly from client browser.
 Whitelisted Cookies | Not applicable for this datasource
 Basic Auth | Authenticate to HDS (if required, provide User and Password)
 5. Save & Test, you should see this confirmation:
