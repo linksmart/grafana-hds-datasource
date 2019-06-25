@@ -97,7 +97,10 @@ export class GenericDatasource {
   convertData(data) {
     
     var datapoints = _.map(data.data, entry => {
-      var value = entry["v"] || entry["sv"] ||entry["bv"] //take float or string or bool
+      var value = entry["v"] || entry["vs"] ||entry["vb"] //take float or string or bool
+      if (typeof value === "boolean"){
+        value = (value==true ? 1:0)
+      }
       return [value, entry["t"] * 1000];
     });
     return datapoints;
