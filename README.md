@@ -38,6 +38,7 @@ Access | Server (Default): Let Grafana server proxy the requests to HDS. / Brows
 Whitelisted Cookies | Not applicable for this datasource
 Basic Auth | Authenticate to HDS (if required, provide User and Password)
 5. Save & Test, you should see this confirmation:
+
 ![](https://raw.githubusercontent.com/linksmart/grafana-hds-datasource/master/docs/datasource_working.png)
 
 ### Query Configuration
