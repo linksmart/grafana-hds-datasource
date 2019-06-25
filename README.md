@@ -2,7 +2,7 @@
 [Grafana](http://grafana.org/) datasource plugin for [LinkSmart Historical Datastore (HDS)](https://docs.linksmart.eu/display/HDS).
 
 ## Sample Dashboard
-![](https://raw.githubusercontent.com/linksmart/grafana-hds-datasource/master/docs/dashboard.png)]
+![](https://raw.githubusercontent.com/linksmart/grafana-hds-datasource/master/docs/dashboard.png)
 ## Installation
 
 ### Install via grafana-cli
@@ -57,7 +57,7 @@ Source | The measurement, aggregates, and retention policy (Preconfigured at HDS
 npm install 
 grunt
 ```
-## Sample HDS for Testing Purpose
+## Sample HDS for Demonstration Purposes
 To run Historical Datastore in demo mode (with continuously growing dummy senml data)
 ```
 docker run -p 8085:8085  linksmart/hds -demo -conf /conf/docker.json
