@@ -55,7 +55,7 @@ Source | The measurement, aggregates, and retention policy (Preconfigured at HDS
 ### Build the source
 ```
 npm install 
-grunt
+npm run build
 ```
 ## Sample HDS for Demonstration Purposes
 To run Historical Datastore in demo mode (with continuously growing dummy senml data)
