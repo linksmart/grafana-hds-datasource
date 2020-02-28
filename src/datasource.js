@@ -75,7 +75,7 @@ export class GenericDatasource {
         entries[idi].target = target.metric 
         entries[idi].datapoints.push(...datapoints);
 
-        if (nextlink != "") {
+        if (typeof nextlink != 'undefined' && nextlink != "") {
           // query the next page
           return recursiveReq( idi,nextlink);
         } else if (idi < query.targets.length - 1) {
@@ -97,11 +97,15 @@ export class GenericDatasource {
   convertData(data) {
     
     var datapoints = _.map(data.data, entry => {
-      var value = entry["v"] || entry["vs"] ||entry["vb"] //take float or string or bool
-      if (typeof value === "boolean"){
-        value = (value==true ? 1:0)
+      switch(true){
+        case entry.hasOwnProperty("v"):
+          return [entry["v"], entry["t"] * 1000]; 
+        case entry.hasOwnProperty("vs"):
+          return [entry["vs"], entry["t"] * 1000]; 
+        case entry.hasOwnProperty("vb"):
+          return [(entry["vb"]==true ? 1:0), entry["t"] * 1000]; 
       }
-      return [value, entry["t"] * 1000];
+      throw "No value in senml record!"
     });
     return datapoints;
   }

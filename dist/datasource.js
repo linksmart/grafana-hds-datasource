@@ -101,7 +101,7 @@ var GenericDatasource = exports.GenericDatasource = function () {
           entries[idi].target = target.metric;
           (_entries$idi$datapoin = entries[idi].datapoints).push.apply(_entries$idi$datapoin, _toConsumableArray(datapoints));
 
-          if (nextlink != "") {
+          if (typeof nextlink != 'undefined' && nextlink != "") {
             // query the next page
             return recursiveReq(idi, nextlink);
           } else if (idi < query.targets.length - 1) {
@@ -125,11 +125,15 @@ var GenericDatasource = exports.GenericDatasource = function () {
     value: function convertData(data) {
 
       var datapoints = _lodash2.default.map(data.data, function (entry) {
-        var value = entry["v"] || entry["vs"] || entry["vb"]; //take float or string or bool
-        if (typeof value === "boolean") {
-          value = value == true ? 1 : 0;
+        switch (true) {
+          case entry.hasOwnProperty("v"):
+            return [entry["v"], entry["t"] * 1000];
+          case entry.hasOwnProperty("vs"):
+            return [entry["vs"], entry["t"] * 1000];
+          case entry.hasOwnProperty("vb"):
+            return [entry["vb"] == true ? 1 : 0, entry["t"] * 1000];
         }
-        return [value, entry["t"] * 1000];
+        throw "No value in senml record!";
       });
       return datapoints;
     }
