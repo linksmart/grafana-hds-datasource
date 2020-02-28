@@ -1,5 +1,7 @@
 # LinkSmart HDS - Grafana Datasource Plugin
-[Grafana](http://grafana.org/) datasource plugin for [LinkSmart Historical Datastore (HDS)](https://docs.linksmart.eu/display/HDS).
+[Grafana](http://grafana.org/) datasource plugin for [LinkSmart Historical Datastore (HDS)](https://github.com/linksmart/historical-datastore). 
+
+Please refer to [this page](https://github.com/linksmart/grafana-hds-datasource/blob/master/COMPATIBILITY.md) for the plugin's compatibility with different HDS versions.
 
 ## Sample Dashboard
 ![](https://raw.githubusercontent.com/linksmart/grafana-hds-datasource/master/docs/dashboard.png)
