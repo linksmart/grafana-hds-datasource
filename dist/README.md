@@ -1,5 +1,7 @@
 # LinkSmart HDS - Grafana Datasource Plugin
-[Grafana](http://grafana.org/) datasource plugin for [LinkSmart Historical Datastore (HDS)](https://docs.linksmart.eu/display/HDS).
+[Grafana](http://grafana.org/) datasource plugin for [LinkSmart Historical Datastore (HDS)](https://github.com/linksmart/historical-datastore). 
+
+Please refer to [this page](https://github.com/linksmart/grafana-hds-datasource/blob/master/COMPATIBILITY.md) for the plugin's compatibility with different HDS versions.
 
 ## Sample Dashboard
 ![](https://raw.githubusercontent.com/linksmart/grafana-hds-datasource/master/docs/dashboard.png)
@@ -55,7 +57,7 @@ Source | The measurement, aggregates, and retention policy (Preconfigured at HDS
 ### Build the source
 ```
 npm install 
-grunt
+npm run build
 ```
 ## Sample HDS for Demonstration Purposes
 To run Historical Datastore in demo mode (with continuously growing dummy senml data)

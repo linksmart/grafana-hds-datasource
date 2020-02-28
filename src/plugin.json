@@ -24,10 +24,11 @@
     "links": [
       {"name": "Historical Datastore", "url": "https://docs.linksmart.eu/display/HDS"},
       {"name": "Source Codes", "url": "https://github.com/linksmart/grafana-hds-datasource"},
+      {"name": "Compatibility with HDS", "url": "https://github.com/linksmart/grafana-hds-datasource/blob/master/COMPATIBILITY.md"},
       {"name": "Apache License", "url": "https://raw.githubusercontent.com/linksmart/grafana-hds-datasource/master/LICENSE"}
     ],
-    "version": "1.0.0", 
-    "updated": "2019-05-31"
+    "version": "1.0.1", 
+    "updated": "2020-02-28"
   },
 
   "dependencies": {
