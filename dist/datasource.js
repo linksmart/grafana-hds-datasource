@@ -90,7 +90,6 @@ var GenericDatasource = exports.GenericDatasource = function () {
         }
         return parent.backendSrv.datasourceRequest({
           url: url,
-          data: query,
           method: 'GET'
         }).then(function (d) {
           var _entries$idi$datapoin;
@@ -162,7 +161,6 @@ var GenericDatasource = exports.GenericDatasource = function () {
         return parent.backendSrv.datasourceRequest({
           //url: this.url + '/search',
           url: parent.url + '/registry?page=' + page,
-          data: options,
           method: 'GET'
           //headers: { 'Content-Type': 'application/json' }
         }).then(function (res) {

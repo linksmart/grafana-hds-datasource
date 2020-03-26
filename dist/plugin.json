@@ -28,7 +28,7 @@
       {"name": "Apache License", "url": "https://raw.githubusercontent.com/linksmart/grafana-hds-datasource/master/LICENSE"}
     ],
     "version": "1.0.1", 
-    "updated": "2020-02-28"
+    "updated": "2020-03-26"
   },
 
   "dependencies": {

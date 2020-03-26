@@ -66,7 +66,6 @@ export class GenericDatasource {
       }
       return parent.backendSrv.datasourceRequest({
         url: url ,
-        data: query,
         method: 'GET'
       }).then(function (d) {
         var nextlink = d.data.nextLink; 
@@ -128,7 +127,6 @@ export class GenericDatasource {
       return parent.backendSrv.datasourceRequest({
         //url: this.url + '/search',
         url: parent.url + '/registry?page='+page,
-        data: options,
         method: 'GET',
         //headers: { 'Content-Type': 'application/json' }
       }).then(function (res) {
