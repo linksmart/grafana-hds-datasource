@@ -159,7 +159,7 @@ var GenericDatasource = exports.GenericDatasource = function () {
                   break;
                 }
 
-                return _context3.abrupt("return", recursiveReq(nextlink, target, options, data));
+                return _context3.abrupt("return", this.recursiveRequest(nextlink, target, options, data));
 
               case 11:
                 return _context3.abrupt("return", this.transformToTable(data, 0, {

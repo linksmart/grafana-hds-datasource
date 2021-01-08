@@ -68,7 +68,7 @@ export class GenericDatasource {
 
     if (typeof nextlink != 'undefined' && nextlink != "") {
       // query the next page
-      return recursiveReq(nextlink, target, options, data);
+      return this.recursiveRequest(nextlink, target, options, data);
     } else {
       return this.transformToTable(
         data,
