@@ -37,7 +37,7 @@ export class GenericDatasource {
     let allTargetResults = { data: [] };
 
     let testPromises = options.targets.map(async target => {
-      if(!('metric' in target) || target.metric == 'select datastream') {
+      if(!('metric' in target) || target.metric == 'select time series') {
         return {'target': '', 'datapoints' : []};
       }
       return await this.recursiveRequest("", target, options, []);
@@ -116,7 +116,7 @@ export class GenericDatasource {
   // Remove targets that have unselected metric or source
   filterPlaceholders(options) {
     options.targets = _.filter(options.targets, target => {
-      return target.metric !== 'select datastream';
+      return target.metric !== 'select time series';
     });
 
     return options;
@@ -150,7 +150,11 @@ export class GenericDatasource {
 
   // Convert registration from Registry API to the format required by Grafana + some meta information
   convertMetrics(res) {
-    return _.map(res.data.streams, (d, i) => {
+    var series = res.data.series
+    if (!series) {
+      series = res.data.streams
+    }
+    return _.map(series, (d, i) => {
       return {
         text: d.name,
         value: i

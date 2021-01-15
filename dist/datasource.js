@@ -78,7 +78,7 @@ var GenericDatasource = exports.GenericDatasource = function () {
                       while (1) {
                         switch (_context.prev = _context.next) {
                           case 0:
-                            if (!(!('metric' in target) || target.metric == 'select datastream')) {
+                            if (!(!('metric' in target) || target.metric == 'select time series')) {
                               _context.next = 2;
                               break;
                             }
@@ -241,7 +241,7 @@ var GenericDatasource = exports.GenericDatasource = function () {
     key: "filterPlaceholders",
     value: function filterPlaceholders(options) {
       options.targets = _lodash2.default.filter(options.targets, function (target) {
-        return target.metric !== 'select datastream';
+        return target.metric !== 'select time series';
       });
 
       return options;
@@ -280,7 +280,12 @@ var GenericDatasource = exports.GenericDatasource = function () {
   }, {
     key: "convertMetrics",
     value: function convertMetrics(res) {
-      return _lodash2.default.map(res.data.streams, function (d, i) {
+      var series = res.data.series;
+      if (!series) {
+        // console.error('Could not find serries, falling back to stream');
+        series = res.data.streams;
+      }
+      return _lodash2.default.map(series, function (d, i) {
         return {
           text: d.name,
           value: i
