@@ -3,6 +3,7 @@ import _ from "lodash";
 export class GenericDatasource {
 
   constructor(instanceSettings, $q, backendSrv, templateSrv) {
+    this.apiEndpoint = "data/";
     this.type = instanceSettings.type;
     this.url = instanceSettings.url;
     this.name = instanceSettings.name;
@@ -31,65 +32,68 @@ export class GenericDatasource {
 
   // Query data from Data API
   // Called once per panel (graph)
-  query(options) {
-    var query = this.filterPlaceholders(options);
-    //console.log("query QUERY:", JSON.stringify(query));
+  async query(options) {
+    options.targets = _.filter(options.targets, target => target.hide !== true);
+    let allTargetResults = { data: [] };
 
-    // Filter targets that are set to hidden
-    query.targets = _.filter(query.targets, target => {
-      return target.hide != true;
-    });
-
-    // All targets filtered OR no metric selected
-    if (query.targets.length <= 0 || !('metric' in query.targets[0])) {
-      return this.q.when([]);
-    }
- 
-    // Make a new array with zero-valued object fields
-    var entries = Array.apply(null, Array(query.targets.length)).map(function () {
-      return {target: '', datapoints: []};
-    });
-
-    var parent = this;
-
-    const apiEndpoint = "data/";
-
-    function recursiveReq(idi,url) {
-
-      var target = query.targets[idi];
-
-      if (url == ""){
-        url = parent.url + "/" + apiEndpoint + target.metric +
-        '?from=' + query.range.from.toISOString() + '&to=' + query.range.to.toISOString()
-      }else{
-        url = parent.url + url
+    let testPromises = options.targets.map(async target => {
+      if(!('metric' in target) || target.metric == 'select time series') {
+        return {'target': '', 'datapoints' : []};
       }
-      return parent.backendSrv.datasourceRequest({
-        url: url ,
-        method: 'GET'
-      }).then(function (d) {
-        var nextlink = d.data.nextLink; 
-        var datapoints = parent.convertData(d.data);
-     
-        entries[idi].target = target.metric 
-        entries[idi].datapoints.push(...datapoints);
+      return await this.recursiveRequest("", target, options, []);
+    });
+    return Promise.all(testPromises).then(function (values) {
+      allTargetResults.data = values;
+      return allTargetResults;
+    });
+  }
 
-        if (typeof nextlink != 'undefined' && nextlink != "") {
-          // query the next page
-          return recursiveReq( idi,nextlink);
-        } else if (idi < query.targets.length - 1) {
-          // one target done, query the next target
-          return recursiveReq(++idi,"");
-        } else {
-          // all done
-          d.data = entries;
-          return d;
-        }
+  //recursively fetch the data
+  async recursiveRequest(reqUrl, target, options, data) {
+    if (reqUrl == ""){
+      reqUrl = this.url + "/" + this.apiEndpoint + target.metric +
+      '?from=' + options.range.from.toISOString() + '&to=' + options.range.to.toISOString()
+    } else {
+      reqUrl = this.url + reqUrl
+    }
 
-      });
-    } // end func
-   
-    return recursiveReq(0,"");
+    let response = await this.doRequest({
+      url: reqUrl,
+      method: 'GET'
+    });
+
+    var nextlink = response.data.nextLink; 
+    var datapoints = this.convertData(response.data);
+    data.push(...datapoints);
+
+    if (typeof nextlink != 'undefined' && nextlink != "") {
+      // query the next page
+      return this.recursiveRequest(nextlink, target, options, data);
+    } else {
+      return this.transformToTable(
+        data,
+        0,
+        {
+          columns: [
+            {text: "time", type: "time"},
+            {text: target.metric}
+          ],
+          values: [
+            function(v) { return v[1]; }, 
+            function(v) { return v[0]; }, 
+          ] 
+        },
+        target
+      );
+          
+    }
+  }
+
+  // make an request to the server
+  async doRequest(options) {
+    options.withCredentials = this.withCredentials;
+    options.headers = this.headers;
+    return this.backendSrv.datasourceRequest(options);
   }
 
   // Convert historical SenML data from Data/Aggr API to Grafana datapoints
@@ -112,7 +116,7 @@ export class GenericDatasource {
   // Remove targets that have unselected metric or source
   filterPlaceholders(options) {
     options.targets = _.filter(options.targets, target => {
-      return target.metric !== 'select datastream';
+      return target.metric !== 'select time series';
     });
 
     return options;
@@ -146,12 +150,61 @@ export class GenericDatasource {
 
   // Convert registration from Registry API to the format required by Grafana + some meta information
   convertMetrics(res) {
-    return _.map(res.data.streams, (d, i) => {
+    var series = res.data.series
+    if (!series) {
+      series = res.data.streams
+    }
+    return _.map(series, (d, i) => {
       return {
         text: d.name,
         value: i
       };
     });
+  }
+
+  transformToTable(data, limit, options, target) {
+    if (!data) {
+      console.error('Could not convert data to Tableformat, data is not valid.');
+      return [];
+    }
+
+    if (Array.isArray(data)) {
+      if (data.length === 0) {
+        console.log('Could not convert data to Tableformat, data is empty.');
+        return [];
+      }
+    }
+
+    if(limit == 0) {
+      limit = data.length;
+    }
+    limit = Math.min(limit, data.length);
+
+    let table = {
+      columnMap: {},
+      columns: [],
+      meta: {},
+      refId: target.refId,
+      rows: [],
+      type: "table"
+    };
+
+    if(options.hasOwnProperty("columns")) {
+      for(let i = 0; i < options.columns.length; i++) {
+        table.columns.push(options.columns[i]);
+      }
+    }
+    
+    if(options.hasOwnProperty("values")) {
+      for(let i = 0; i < limit; i++) {
+        let row = [];
+        for(let j = 0; j < options.values.length; j++) {
+          row.push(options.values[j](data[i]));
+        }
+        table.rows.push(row);
+      }
+    }
+    return table;
   }
 
 
