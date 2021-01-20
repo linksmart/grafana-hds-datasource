@@ -1,5 +1,5 @@
 # Plugin compatibility with HDS
-## [1.0.2] - 2021-01-15
+## [1.1.0] - 2021-01-20 (not official)
 Compatible with HDS `> v1.0.0-beta.1` 
 
 ## [1.0.1] - 2020-02-28
