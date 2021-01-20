@@ -7,19 +7,28 @@ Please refer to [this page](https://github.com/linksmart/grafana-hds-datasource/
 ![](https://raw.githubusercontent.com/linksmart/grafana-hds-datasource/master/docs/dashboard.png)
 ## Installation
 
-### Install via grafana-cli
+### Installation of latest official release
+Using grafana-cli:
 ```
 sudo grafana-cli plugins install linksmart-hds-datasource
+```
+If using [Grafana Docker Image](https://hub.docker.com/r/grafana/grafana/), set container environment variable instead:
+```
+GF_INSTALL_PLUGINS=linksmart-hds-datasource
 ```
 
 ### Install from source 
 
-* Clone the repository into Grafana's [plugin directory](http://docs.grafana.org/plugins/installation/#grafana-plugin-directory):
+Clone the repository into Grafana's [plugin directory](http://docs.grafana.org/plugins/installation/#grafana-plugin-directory) and restart grafana:
 ```
 git clone https://github.com/linksmart/grafana-hds-datasource.git linksmart-hds
 ```
-* Restart Grafana.
 
+If using [Grafana Docker Image](https://hub.docker.com/r/grafana/grafana/), set container environment variable instead:
+```
+GF_INSTALL_PLUGINS="https://github.com/linksmart/grafana-hds-datasource/archive/master.zip;linksmart-hds-datasource"
+```
+you can replace the `master` branch with the version of your choice. 
 
 ## Configuration
 
